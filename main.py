@@ -18,6 +18,7 @@ def setup_database(file, connection):
 def main():
 
     try:
+        #Check for the right stats
         connection = mysql.connector.connect(
             user = 'philipp',
             password = '1234',
@@ -30,15 +31,15 @@ def main():
         #SQL Dateien einlesen und Datenbanke erstellen
         #Only execute if Database is not filled
         setup_database("create_database.sql", connection)
-        setup_database("fill_database.sql", connection)
+        #setup_database("fill_database.sql", connection)
 
-        cursor = connection.cursor()
-        cursor.execute('SELECT * FROM product')
-        rows = cursor.fetchall()
-
-        for tuple in rows:
-            quant = int(tuple[2])
-            print(quant)
+        #cursor = connection.cursor()
+        #cursor.execute('SELECT * FROM product')
+        #rows = cursor.fetchall()
+#
+        #for tuple in rows:
+        #    quant = int(tuple[2])
+        #    print(quant)
 
 
     except Error as e: logging.error(f"Error: {e}")
