@@ -1,0 +1,6 @@
+CREATE TABLE product (
+    p_id INT AUTO_INCREMENT PRIMARY KEY,
+    cost DECIMAL(10, 2) NOT NULL,
+    quantity INT NOT NULL,
+    name VARCHAR(100) NOT NULL
+);
