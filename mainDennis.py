@@ -1,6 +1,6 @@
-import logging
-from mysql.connector import Error
 import mysql.connector
+from mysql.connector import Error
+import logging
 
 def execute_sql_file(file_path, host, user, password, database):
     connection = None
@@ -44,21 +44,21 @@ def execute_sql_file(file_path, host, user, password, database):
         if connection:
             connection.close()
 
-# Beispielaufruf der Funktion
+# create tables
 execute_sql_file(
     file_path='create_database.sql',  # Pfad zur SQL-Datei
     host='localhost',               # MySQL-Server-Adresse
-    user='aaron',       # MySQL-Benutzername
-    password='135798642.A',       # MySQL-Passwort
-    database='onlineshop'      # Name der Datenbank
+    user='dennis',       # MySQL-Benutzername
+    password='füller',       # MySQL-Passwort
+    database='marktplatz'      # Name der Datenbank
 )
 
 
-# Beispielaufruf der Funktion
+# fill tables with values
 execute_sql_file(
     file_path='fill_database.sql',  # Pfad zur SQL-Datei
     host='localhost',             # MySQL-Server-Adresse
-    user='aaron',     # MySQL-Benutzername
-    password='135798642.A',     # MySQL-Passwort
-    database='onlineshop'    # Name der Datenbank
+    user='dennis',     # MySQL-Benutzername
+    password='füller',     # MySQL-Passwort
+    database='marktplatz'    # Name der Datenbank
 )
