@@ -1,0 +1,26 @@
+# Virtuelle Umgebungen
+.venv/
+env/
+venv/
+
+# Python-Bytecode-Dateien
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE-spezifische Dateien
+.vscode/
+.idea/
+
+# Betriebssystem-spezifische Dateien
+.DS_Store
+Thumbs.db
+
+# Log-Dateien
+*.log
+
+# Andere temporäre Dateien
+*.tmp
+*.swp
+*.swo
