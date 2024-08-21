@@ -46,7 +46,7 @@ def execute_sql_file(file_path, host, user, password, database):
 
 # Beispielaufruf der Funktion
 execute_sql_file(
-    file_path='create_database.sql',  # Pfad zur SQL-Datei
+    file_path='sqlFiles/create_database.sql',  # Pfad zur SQL-Datei
     host='localhost',               # MySQL-Server-Adresse
     user='aaron',       # MySQL-Benutzername
     password='135798642.A',       # MySQL-Passwort
@@ -56,7 +56,7 @@ execute_sql_file(
 
 # Beispielaufruf der Funktion
 execute_sql_file(
-    file_path='fill_database.sql',  # Pfad zur SQL-Datei
+    file_path='sqlFiles/fill_database.sql',  # Pfad zur SQL-Datei
     host='localhost',             # MySQL-Server-Adresse
     user='aaron',     # MySQL-Benutzername
     password='135798642.A',     # MySQL-Passwort
