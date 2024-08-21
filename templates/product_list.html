@@ -1,21 +1,22 @@
 {% extends 'base.html' %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Products{% endblock %}
 
 {% block content %}
-    <h1>Welcome to eBay Clone</h1>
+    <h1>Product List</h1>
     <section>
-        <h2>Featured Products</h2>
+        <form method="get" action="{{ url_for('product_list') }}">
+            <input type="text" name="search" placeholder="Search for products">
+            <button type="submit">Search</button>
+        </form>
         <div class="product-grid">
-            <!-- Loop through featured products -->
-            {% for product in featured_products %}
+            <!-- Loop through products -->
+            {% for product in products %}
                 <div class="product-item">
+                    <a href="{{ url_for('product_detail', product_id=product['product_id']) }}">View Details</a>
                     <img src="{{ product.image_url }}" alt="{{ product.name }}">
                     <h3><a href="{{ url_for('product_detail', product_id=product.id) }}">{{ product.name }}</a></h3>
                     <p>${{ product.price }}</p>
-                    <p>
-                        <a href="{{ url_for('user_profile', user_id=user['user_id']) }}">{{ user['username'] }}</a>
-                    </p>
                 </div>
             {% endfor %}
         </div>

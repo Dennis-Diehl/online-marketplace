@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+    <h1>{{ product.name }}</h1>
+    <img src="{{ product.image_url }}" alt="{{ product.name }}">
+    <p>${{ product.price }}</p>
+    <p>{{ product.description }}</p>
+    <form method="post" action="{{ url_for('add_to_cart', product_id=product.id) }}">
+        <button type="submit">Add to Cart</button>
+    </form>
+    <a href="{{ url_for('product_list') }}">Back to Products</a>
+{% endblock %}

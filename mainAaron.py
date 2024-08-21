@@ -9,9 +9,9 @@ def execute_sql_file(file_path, host, user, password, database):
         # Verbindung zur MySQL-Datenbank herstellen
         connection = mysql.connector.connect(
             host=host,
-            user=user,
-            password=password,
-            database=database,
+            user='aaron',
+            password='135798642.A',
+            database='onlineshop',
             charset='utf8mb4',  # Charset festlegen
             collation='utf8mb4_general_ci'  # Collation explizit festlegen
         )

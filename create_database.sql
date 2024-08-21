@@ -37,7 +37,6 @@ CREATE TABLE Users (
     FOREIGN KEY (v_id) REFERENCES Visitors(v_id)  -- Korrekte Fremdschlüsselreferenzierung
 );
 
-
 CREATE TABLE ShoppingCarts (
     cart_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT,
