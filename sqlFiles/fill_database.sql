@@ -4,9 +4,9 @@ INSERT INTO Visitors (ip) VALUES
 ('10.0.0.1');
 
 -- Füge Benutzer hinzu
-INSERT INTO Users (username, password, email, v_id) VALUES 
-('john_doe', 'hashed_password_1', 'john@example.com', 1),
-('jane_smith', 'hashed_password_2', 'jane@example.com', 2);
+INSERT INTO Users (username, password, email) VALUES 
+('john_doe', 'hashed_password_1', 'john@example.com'),
+('jane_smith', 'hashed_password_2', 'jane@example.com');
 
 -- Füge einige ShoppingCarts hinzu
 INSERT INTO ShoppingCarts (user_id, created_at) VALUES 
@@ -44,9 +44,9 @@ INSERT INTO ShoppingCartItems (position, cart_id, product_id, quantity) VALUES
 (2, 2, 2, 2);
 
 -- Füge Bestellungen hinzu
-INSERT INTO Orders (delivery_address, user_id, shopping_cart_id) VALUES 
-('123 Main St', 1, 1),
-('456 Elm St', 2, 2);
+INSERT INTO Orders (delivery_address, user_id, status, shopping_cart_id) VALUES 
+('123 Main St', 1,'completed', 1),
+('456 Elm St', 2, 'Pending', 2);
 
 -- Füge Zahlungsmethoden hinzu
 INSERT INTO PaymentMethods (pm_name) VALUES 
@@ -54,9 +54,9 @@ INSERT INTO PaymentMethods (pm_name) VALUES
 ('PayPal');
 
 -- Füge Zahlungen hinzu
-INSERT INTO Payments (order_id, method_id, status) VALUES 
-(1, 1, 'Completed'),
-(2, 2, 'Pending');
+INSERT INTO Payments (order_id, method_id) VALUES 
+(1, 1),
+(2, 2);
 
 -- Füge Abonnements hinzu
 INSERT INTO Subscriptions (user_id, seller_id) VALUES 

@@ -33,8 +33,14 @@ CREATE TABLE Users (
     acc_creation_date DATE DEFAULT CURRENT_DATE,
     cart_id INT,
     email VARCHAR(255) NOT NULL UNIQUE,
-    v_id INT,  -- Hinzugefügt für die Beziehung
-    FOREIGN KEY (v_id) REFERENCES Visitors(v_id)  -- Korrekte Fremdschlüsselreferenzierung
+    FOREIGN KEY (user_id) REFERENCES Visitors(v_id)  -- Korrekte Fremdschlüsselreferenzierung
+);
+
+CREATE TABLE Sellers (
+    seller_id INT PRIMARY KEY,
+    shopname VARCHAR(255) NOT NULL,
+    rating DECIMAL(3, 2) CHECK (rating >= 0 AND rating <= 5),
+    FOREIGN KEY (seller_id) REFERENCES Users(user_id)
 );
 
 CREATE TABLE ShoppingCarts (
@@ -44,12 +50,6 @@ CREATE TABLE ShoppingCarts (
     FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
 
-CREATE TABLE Sellers (
-    seller_id INT PRIMARY KEY,
-    shopname VARCHAR(255) NOT NULL,
-    rating DECIMAL(3, 2) CHECK (rating >= 0 AND rating <= 5),
-    FOREIGN KEY (seller_id) REFERENCES Users(user_id)
-);
 
 CREATE TABLE Pictures (
     pic_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -105,6 +105,7 @@ CREATE TABLE Orders (
     payment_id INT,
     shopping_cart_id INT,
     user_id INT,
+    status VARCHAR(255) NOT NULL,
     FOREIGN KEY (shopping_cart_id) REFERENCES ShoppingCarts(cart_id),
     FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
@@ -118,7 +119,6 @@ CREATE TABLE Payments (
     payment_id INT PRIMARY KEY AUTO_INCREMENT,
     order_id INT,
     method_id INT,
-    status VARCHAR(50) NOT NULL,
     p_date DATE DEFAULT CURRENT_DATE,
     FOREIGN KEY (order_id) REFERENCES Orders(order_id),
     FOREIGN KEY (method_id) REFERENCES PaymentMethods(pm_id)
