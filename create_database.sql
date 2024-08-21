@@ -21,6 +21,10 @@ DROP TABLE IF EXISTS Visitors;
 -- Wiederherstellen der Foreign Key Constraints
 SET FOREIGN_KEY_CHECKS = 1;
 
+CREATE TABLE Visitors (
+    v_id INT PRIMARY KEY AUTO_INCREMENT,
+    ip VARCHAR(45) NOT NULL
+);
 
 CREATE TABLE Users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -28,8 +32,11 @@ CREATE TABLE Users (
     password VARCHAR(255) NOT NULL,
     acc_creation_date DATE DEFAULT CURRENT_DATE,
     cart_id INT,
-    email VARCHAR(255) NOT NULL UNIQUE
+    email VARCHAR(255) NOT NULL UNIQUE,
+    v_id INT,  -- Hinzugefügt für die Beziehung
+    FOREIGN KEY (v_id) REFERENCES Visitors(v_id)  -- Korrekte Fremdschlüsselreferenzierung
 );
+
 
 CREATE TABLE ShoppingCarts (
     cart_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -125,11 +132,6 @@ CREATE TABLE Subscriptions (
     sub_date DATE DEFAULT CURRENT_DATE,
     FOREIGN KEY (user_id) REFERENCES Users(user_id),
     FOREIGN KEY (seller_id) REFERENCES Sellers(seller_id)
-);
-
-CREATE TABLE Visitors (
-    v_id INT PRIMARY KEY AUTO_INCREMENT,
-    ip VARCHAR(45) NOT NULL
 );
 
 CREATE TABLE Messaging (
