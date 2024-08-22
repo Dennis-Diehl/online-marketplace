@@ -4,7 +4,7 @@
 
 {% block content %}
     <h1>Checkout</h1>
-    <form method="post" action="{{ url_for('process_checkout') }}">
+    <form method="post" action="{{ url_for('checkout') }}">
         <!-- Payment and shipping details -->
         <label for="address">Address:</label>
         <input type="text" id="address" name="address" required>
