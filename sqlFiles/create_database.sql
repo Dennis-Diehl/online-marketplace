@@ -27,13 +27,13 @@ CREATE TABLE Visitors (
 );
 
 CREATE TABLE Users (
-    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     acc_creation_date DATE DEFAULT CURRENT_DATE,
     cart_id INT,
     email VARCHAR(255) NOT NULL UNIQUE,
-    FOREIGN KEY (user_id) REFERENCES Visitors(v_id)  -- Korrekte Fremdschlüsselreferenzierung
+    FOREIGN KEY (user_id) REFERENCES Visitors(v_id) ON DELETE CASCADE
 );
 
 CREATE TABLE Sellers (
@@ -54,6 +54,7 @@ CREATE TABLE ShoppingCarts (
 CREATE TABLE Pictures (
     pic_id INT PRIMARY KEY AUTO_INCREMENT,
     source VARCHAR(255) NOT NULL
+    
 );
 
 CREATE TABLE Category (

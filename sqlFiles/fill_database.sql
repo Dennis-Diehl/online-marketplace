@@ -1,12 +1,15 @@
 -- Füge einige Besucher hinzu
 INSERT INTO Visitors (ip) VALUES 
 ('192.168.1.1'), 
-('10.0.0.1');
+('23.2323.42424.'),
+('10.0.0.1'),
+('52.2323.42424.');
 
 -- Füge Benutzer hinzu
-INSERT INTO Users (username, password, email) VALUES 
-('john_doe', 'hashed_password_1', 'john@example.com'),
-('jane_smith', 'hashed_password_2', 'jane@example.com');
+INSERT INTO Users (user_id, username, password, email) VALUES 
+(1, 'john_doe', 'hashed_password_1', 'john@example.com'),
+(2, 'jane_smith', 'hashed_password_2', 'jane@example.com'),
+(4, 'fülle', 'hashed_password_2', 'fülle@example.com');
 
 -- Füge einige ShoppingCarts hinzu
 INSERT INTO ShoppingCarts (user_id, created_at) VALUES 

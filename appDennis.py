@@ -11,8 +11,10 @@ db_config = {
     'user': 'dennis',
     'password': 'füller',
     'host': 'localhost',
-    'database': 'markplatz',
-    'raise_on_warnings': True
+    'database': 'marktplatz',
+    'raise_on_warnings': True,
+    'charset':'utf8mb4',  # Charset festlegen
+    'collation':'utf8mb4_general_ci'  # Collation explizit festlegen
 }
 
 def get_db_connection():
