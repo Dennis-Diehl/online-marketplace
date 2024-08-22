@@ -61,4 +61,4 @@ execute_sql_file(
     user='dennis',     # MySQL-Benutzername
     password='füller',     # MySQL-Passwort
     database='marktplatz'    # Name der Datenbank
-)
+) 

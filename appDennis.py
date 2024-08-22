@@ -11,8 +11,10 @@ db_config = {
     'user': 'dennis',
     'password': 'füller',
     'host': 'localhost',
-    'database': 'markplatz',
-    'raise_on_warnings': True
+    'database': 'marktplatz',
+    'raise_on_warnings': True,
+    'charset':'utf8mb4',  # Charset festlegen
+    'collation':'utf8mb4_general_ci'  # Collation explizit festlegen
 }
 
 def get_db_connection():
@@ -27,6 +29,8 @@ def index():
 
 @app.route('/products')
 def product_list():
+    cursor = None
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -34,9 +38,7 @@ def product_list():
         products = cursor.fetchall()
         return render_template('product_list.html', products=products)
     except mysql.connector.Error as err:
-        # Log or handle database error
-        print(f"Database error: {err}")
-        return "Database error", 500
+        return  f"Database error: {err}", 500
     finally:
         # Ensure the cursor and connection are closed
         if cursor:

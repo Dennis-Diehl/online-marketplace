@@ -21,11 +21,6 @@ DROP TABLE IF EXISTS Visitors;
 -- Wiederherstellen der Foreign Key Constraints
 SET FOREIGN_KEY_CHECKS = 1;
 
-CREATE TABLE Visitors (
-    v_id INT PRIMARY KEY AUTO_INCREMENT,
-    ip VARCHAR(45) NOT NULL
-);
-
 CREATE TABLE Users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(100) NOT NULL UNIQUE,
