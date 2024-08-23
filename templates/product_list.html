@@ -5,10 +5,6 @@
 {% block content %}
     <h1></h1>
     <section>
-        <form method="get" action="{{ url_for('product_list') }}">
-            <input type="text" name="search" placeholder="Search for products">
-            <button type="submit">Search</button>
-        </form>
         <div class="product-grid">
             <!-- Loop through products -->
             {% for product in products %}
