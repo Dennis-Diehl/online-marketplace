@@ -55,7 +55,7 @@ CREATE TABLE Category (
     c_id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    superiorc_id INT,
+    superiorc_id INT DEFAULT NULL,
     FOREIGN KEY (superiorc_id) REFERENCES Category(c_id)
 );
 
