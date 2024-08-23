@@ -1,8 +1,12 @@
+{% extends 'base.html' %}
+
 <!doctype html>
 <html>
 <head>
     <title>User Profile</title>
 </head>
+
+{% block content %}
 <body>
     <h1>User Profile</h1>
     <p>Username: {{ user.username }}</p>
@@ -45,3 +49,5 @@
     <a href="{{ url_for('index') }}">Back to Home</a>
 </body>
 </html>
+
+{% endblock %}
