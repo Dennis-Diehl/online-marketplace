@@ -1,11 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date
 
 app = Flask(__name__)
 app.secret_key = '135798642.A'  # Stelle sicher, dass dies gesetzt ist
-
 
 # Konfiguration für die Verbindung zur MariaDB
 db_config = {
@@ -14,88 +13,84 @@ db_config = {
     'host': 'localhost',
     'database': 'marktplatz',
     'raise_on_warnings': True,
-    'charset':'utf8mb4',  # Charset festlegen
-    'collation':'utf8mb4_general_ci'  # Collation explizit festlegen
+    'charset': 'utf8mb4',
+    'collation': 'utf8mb4_general_ci'
 }
 
 def get_db_connection():
-    conn = mysql.connector.connect(**db_config)
-    return conn
+    """Stellt eine Verbindung zur Datenbank her."""
+    return mysql.connector.connect(**db_config)
 
 @app.route('/')
 def index():
-    user_id = session.get('user_id')  # Holen des user_id aus der Session
+    """Zeigt die Startseite an."""
+    user_id = session.get('user_id')
     print(f"User ID from session: {user_id}")  # Debugging-Ausgabe
-    return render_template('index.html', user_id=user_id)
+    categories = get_categories()  # Holen der Kategorien
+    return render_template('index.html', user_id=user_id, categories=categories)
 
 @app.route('/products')
 def product_list():
-    cursor = None
-    conn = None
+    """Zeigt eine Liste von Produkten an."""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM products")
-        products = cursor.fetchall()
-        return render_template('product_list.html', products=products)
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT * FROM products")
+                products = cursor.fetchall()
+                return render_template('product_list.html', products=products)
     except mysql.connector.Error as err:
-        return  f"Database error: {err}", 500
-    finally:
-        # Ensure the cursor and connection are closed
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
+        return f"Database error: {err}", 500
 
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
+    """Zeigt die Detailseite eines Produkts an."""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM products WHERE product_id = %s", (product_id,))
-        product = cursor.fetchone()
-        return render_template('product_detail.html', product=product)
-    finally:
-        cursor.close()
-        conn.close()
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT * FROM products WHERE product_id = %s", (product_id,))
+                product = cursor.fetchone()
+                return render_template('product_detail.html', product=product)
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
 
 @app.route('/profile/<int:user_id>')
 def user_profile(user_id):
+    """Zeigt das Profil eines Benutzers an."""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
-        user = cursor.fetchone()
-        return render_template('user_profile.html', user=user)
-    finally:
-        cursor.close()
-        conn.close()
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
+                user = cursor.fetchone()
+                return render_template('user_profile.html', user=user)
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """Behandelt die Anmeldung der Benutzer."""
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
 
         try:
-            conn = get_db_connection()
-            cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
-            user = cursor.fetchone()
+            with get_db_connection() as conn:
+                with conn.cursor(dictionary=True) as cursor:
+                    cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
+                    user = cursor.fetchone()
 
-            if user and check_password_hash(user['password'], password):
-                session['user_id'] = user['user_id']
-                return redirect(url_for('index'))
-            else:
-                return "Invalid username or password", 401
-        finally:
-            cursor.close()
-            conn.close()
+                    if user and check_password_hash(user['password'], password):
+                        session['user_id'] = user['user_id']
+                        return redirect(url_for('index'))
+                    else:
+                        return "Invalid username or password", 401
+        except mysql.connector.Error as err:
+            return f"Database error: {err}", 500
 
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """Behandelt die Registrierung neuer Benutzer."""
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -103,30 +98,97 @@ def register():
         hashed_password = generate_password_hash(password)
 
         try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            today = str(date.today())
-            cursor.execute("INSERT INTO users (username, password, acc_creation_date, email ) VALUES (%s, %s, %s, %s)", (username, hashed_password, today, email))
-            conn.commit()
-            return redirect(url_for('login'))
-        finally:
-            cursor.close()
-            conn.close()
+            with get_db_connection() as conn:
+                with conn.cursor() as cursor:
+                    today = str(date.today())
+                    cursor.execute(
+                        "INSERT INTO users (username, password, acc_creation_date, email) VALUES (%s, %s, %s, %s)",
+                        (username, hashed_password, today, email)
+                    )
+                    conn.commit()
+                    return redirect(url_for('login'))
+        except mysql.connector.Error as err:
+            return f"Database error: {err}", 500
 
     return render_template('register.html')
 
 @app.route('/cart')
 def cart():
-    # Placeholder for cart functionality
+    """Zeigt den Warenkorb an."""
     return render_template('cart.html')
 
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
+    """Behandelt den Checkout-Prozess."""
     if request.method == 'POST':
-        # Placeholder for checkout functionality
+        # Placeholder für Checkout-Funktionalität
         return redirect(url_for('index'))
 
     return render_template('checkout.html')
+
+@app.route('/search')
+def search():
+    """Behandelt Suchanfragen."""
+    query = request.args.get('query')
+    c_id = request.args.get('category')
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                if c_id and c_id != 'all':
+                    cursor.execute(
+                        "SELECT * FROM products WHERE name LIKE %s AND c_id = %s",
+                        (f"%{query}%", c_id)
+                    )
+                else:
+                    cursor.execute(
+                        "SELECT * FROM products WHERE name LIKE %s",
+                        (f"%{query}%",)
+                    )
+                results = cursor.fetchall()
+                return render_template('search_results.html', results=results)
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+
+
+@app.route('/logout')
+def logout():
+    """Behandelt das Logout der Benutzer und leitet zur Startseite weiter."""
+    session.pop('user_id', None)
+    return redirect(url_for('index'))
+
+def get_categories():
+    """Holt alle Kategorien aus der Datenbank und organisiert sie in einem hierarchischen Format."""
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT * FROM Category WHERE superiorc_id IS NULL")
+                root_categories = cursor.fetchall()
+
+                cursor.execute("SELECT * FROM Category WHERE superiorc_id IS NOT NULL")
+                sub_categories = cursor.fetchall()
+
+                subcategories_dict = {}
+                for sub in sub_categories:
+                    parent_id = sub['superiorc_id']
+                    if parent_id not in subcategories_dict:
+                        subcategories_dict[parent_id] = []
+                    subcategories_dict[parent_id].append({
+                        'id': sub['c_id'],
+                        'name': sub['name']
+                    })
+
+                # Hinzufügen der Unterkategorien zu den Wurzelkategorien
+                for cat in root_categories:
+                    cat['subcategories'] = subcategories_dict.get(cat['c_id'], [])
+
+                return root_categories
+
+    except mysql.connector.Error as err:
+        print(f"Database error: {err}")
+        return []
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
