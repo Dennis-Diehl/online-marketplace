@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import date
 
 app = Flask(__name__)
 app.secret_key = '135798642.A'  # Stelle sicher, dass dies gesetzt ist
@@ -8,11 +9,13 @@ app.secret_key = '135798642.A'  # Stelle sicher, dass dies gesetzt ist
 
 # Konfiguration für die Verbindung zur MariaDB
 db_config = {
-    'user': 'aaron',
-    'password': '135798642.A',
+    'user': 'dennis',
+    'password': 'füller',
     'host': 'localhost',
-    'database': 'onlineshop',
-    'raise_on_warnings': True
+    'database': 'marktplatz',
+    'raise_on_warnings': True,
+    'charset':'utf8mb4',  # Charset festlegen
+    'collation':'utf8mb4_general_ci'  # Collation explizit festlegen
 }
 
 def get_db_connection():
@@ -27,6 +30,8 @@ def index():
 
 @app.route('/products')
 def product_list():
+    cursor = None
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -34,9 +39,7 @@ def product_list():
         products = cursor.fetchall()
         return render_template('product_list.html', products=products)
     except mysql.connector.Error as err:
-        # Log or handle database error
-        print(f"Database error: {err}")
-        return "Database error", 500
+        return  f"Database error: {err}", 500
     finally:
         # Ensure the cursor and connection are closed
         if cursor:
@@ -96,12 +99,14 @@ def register():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        email = request.form.get('email')
         hashed_password = generate_password_hash(password)
 
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, hashed_password))
+            today = str(date.today())
+            cursor.execute("INSERT INTO users (username, password, acc_creation_date, email ) VALUES (%s, %s, %s, %s)", (username, hashed_password, today, email))
             conn.commit()
             return redirect(url_for('login'))
         finally:

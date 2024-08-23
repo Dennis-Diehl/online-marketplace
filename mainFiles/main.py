@@ -1,52 +1,64 @@
-import logging
-from mysql.connector import Error
 import mysql.connector
+from mysql.connector import Error
+import logging
 
-def setup_database(file, connection):
-    with open(file, 'r') as file:
-        sql = file.read()
-
-    cursor = connection.cursor()
-
+def execute_sql_file(file_path, host, user, password, database):
+    connection = None
+    cursor = None
     try:
-        cursor.execute(sql, multi=True)  # `multi=True` erlaubt das Ausführen mehrerer SQL-Befehle
-        connection.commit()
-    except Error as e: logging.error(f"Error: {e}")
-    finally:
-        cursor.close()
-
-def main():
-
-    try:
-        #Check for the right stats
+        # Verbindung zur MySQL-Datenbank herstellen
         connection = mysql.connector.connect(
-            user = 'philipp',
-            password = '1234',
-            host = 'localhost', 
-            database = 'onlineshop',
-            collation='utf8mb4_unicode_ci'
+            host=host,
+            user=user,
+            password=password,
+            database=database,
+            charset='utf8mb4',  # Charset festlegen
+            collation='utf8mb4_general_ci'  # Collation explizit festlegen
         )
-        logging.info("Database connection established")
 
-        #SQL Dateien einlesen und Datenbanke erstellen
-        #Only execute if Database is not filled
-        setup_database("create_database.sql", connection)
-        #setup_database("fill_database.sql", connection)
+        # Cursor-Objekt erstellen, um SQL-Anweisungen auszuführen
+        cursor = connection.cursor()
 
-        #cursor = connection.cursor()
-        #cursor.execute('SELECT * FROM product')
-        #rows = cursor.fetchall()
-#
-        #for tuple in rows:
-        #    quant = int(tuple[2])
-        #    print(quant)
+        # SQL-Datei einlesen
+        with open(file_path, 'r', encoding='utf-8') as file:
+            sql_script = file.read()
 
+        # SQL-Skript ausführen
+        for statement in sql_script.split(';'):
+            if statement.strip():  # Verhindert das Ausführen leerer Statements
+                cursor.execute(statement)
 
-    except Error as e: logging.error(f"Error: {e}")
+        # Änderungen in der Datenbank speichern
+        connection.commit()
+        print("SQL-Skript wurde erfolgreich ausgeführt.")
+
+    except mysql.connector.Error as err:
+        print(f"Fehler: {err}")
+        if connection:
+            connection.rollback()
 
     finally:
-        if connection.is_connected():
-            connection.close() 
+        # Verbindung schließen
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
-if __name__ == "__main__":
-    main()
+# create tables
+execute_sql_file(
+    file_path='sqlFiles/create_database.sql',  # Pfad zur SQL-Datei
+    host='localhost',               # MySQL-Server-Adresse
+    user='dennis',       # MySQL-Benutzername
+    password='füller',       # MySQL-Passwort
+    database='marktplatz'      # Name der Datenbank
+)
+
+
+# fill tables with values
+execute_sql_file(
+    file_path='sqlFiles/fill_database.sql',  # Pfad zur SQL-Datei
+    host='localhost',             # MySQL-Server-Adresse
+    user='dennis',     # MySQL-Benutzername
+    password='füller',     # MySQL-Passwort
+    database='marktplatz'    # Name der Datenbank
+) 
