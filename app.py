@@ -27,7 +27,7 @@ def index():
     user_id = session.get('user_id')
     print(f"User ID from session: {user_id}")  # Debugging-Ausgabe
     categories = get_categories()  # Holen der Kategorien
-    return render_template('index.html', user_id=user_id, categories=categories)
+    return render_template('product_list.html', user_id=user_id, categories=categories)
 
 @app.route('/products')
 def product_list():
