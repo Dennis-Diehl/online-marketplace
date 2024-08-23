@@ -1,9 +1,4 @@
--- Füge einige Besucher hinzu
-INSERT INTO Visitors (ip) VALUES 
-('192.168.1.1'), 
-('23.2323.42424.'),
-('10.0.0.1'),
-('52.2323.42424.');
+
 
 -- Füge Benutzer hinzu
 INSERT INTO Users (user_id, username, password, email) VALUES 

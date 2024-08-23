@@ -27,8 +27,7 @@ CREATE TABLE Users (
     password VARCHAR(255) NOT NULL,
     acc_creation_date DATE DEFAULT CURRENT_DATE,
     cart_id INT,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    FOREIGN KEY (user_id) REFERENCES Visitors(v_id) ON DELETE CASCADE
+    email VARCHAR(255) NOT NULL UNIQUE
 );
 
 CREATE TABLE Sellers (
