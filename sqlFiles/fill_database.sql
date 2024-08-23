@@ -18,8 +18,8 @@ INSERT INTO Sellers (seller_id, shopname, rating) VALUES
 
 -- Füge einige Bilder hinzu
 INSERT INTO Pictures (source) VALUES 
-('images/smartphone.jpg'),
-('image2.jpg');
+('images/Smartphone.jpg'),
+('images/Kopfhörer.jpg');
 
 -- Füge Kategorien hinzu
 INSERT INTO Category (name, description, superiorc_id) VALUES 
@@ -29,7 +29,7 @@ INSERT INTO Category (name, description, superiorc_id) VALUES
 -- Füge Produkte hinzu
 INSERT INTO Products (picture_id, cost, available_copies, category_id, information, seller_id, name) VALUES 
 (1, 199.99, 10, 1, 'Latest model of smartphone.', 1, 'Smartphone'),
-(2, 15.99, 50, 2, 'Interesting book on programming.', 2, 'Programming Book');
+(2, 30.99, 50, 2, 'Bluetooth Kopfhörer.', 2, 'Kopfhörer');
 
 -- Füge Bewertungen hinzu
 INSERT INTO Reviews (rating, product_id, reviewer, comment) VALUES 
