@@ -52,6 +52,7 @@ nav .center-nav input[type="text"] {
   font-size: 16px;
   border: 1px solid #ccc;
   cursor: pointer;
+  pointer-events: none;
   border-radius: 15px;
 }
 
@@ -276,7 +277,6 @@ footer {
 }
 
 img {
-  width: 200px;
-  height: auto;
-}
-
+    width: 200px; /* Setzt die Breite des Bildes auf 200 Pixel */
+    height:auto; /* Hält das Seitenverhältnis bei der Anpassung der Höhe */
+}}
