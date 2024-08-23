@@ -18,7 +18,7 @@ INSERT INTO Sellers (seller_id, shopname, rating) VALUES
 
 -- Füge einige Bilder hinzu
 INSERT INTO Pictures (source) VALUES 
-('image1.jpg'),
+('images/smartphone.jpg'),
 ('image2.jpg');
 
 -- Füge Kategorien hinzu

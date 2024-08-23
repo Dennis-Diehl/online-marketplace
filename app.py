@@ -35,7 +35,7 @@ def product_list():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM products")
+        cursor.execute("SELECT * FROM products p JOIN Pictures pi ON p.picture_id = pi.pic_id")
         products = cursor.fetchall()
         return render_template('product_list.html', products=products)
     except mysql.connector.Error as err:
@@ -52,7 +52,7 @@ def product_detail(product_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM products WHERE product_id = %s", (product_id,))
+        cursor.execute("SELECT * FROM products p JOIN pictures pi ON p.picture_id = pi.pic_id WHERE product_id = %s", (product_id,))
         product = cursor.fetchone()
         return render_template('product_detail.html', product=product)
     finally:
@@ -127,6 +127,31 @@ def checkout():
         return redirect(url_for('index'))
 
     return render_template('checkout.html')
+
+@app.route('/add_product/<int:user_id>', methods=['POST'])
+def add_product(user_id):
+    name = request.form.get('name')
+    cost = request.form.get('cost')
+    available_copies = request.form.get('available_copies')
+    category_id = request.form.get('category_id')
+    information = request.form.get('information')
+    picture_id = request.form.get('picture_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO Products (name, cost, available_copies, category_id, information, picture_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (name, cost, available_copies, category_id, information, picture_id))
+        conn.commit()
+        return redirect(url_for('user_profile', user_id=user_id))
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+    finally:
+        cursor.close()
+        conn.close()
+
 
 if __name__ == "__main__":
     app.run(debug=True)
