@@ -1,8 +1,9 @@
-{% extends "base.html" %}
-
-{% block title %}User Profile{% endblock %}
-
-{% block content %}
+<!doctype html>
+<html>
+<head>
+    <title>User Profile</title>
+</head>
+<body>
     <h1>User Profile</h1>
     <p>Username: {{ user.username }}</p>
     <p>Email: {{ user.email }}</p>
@@ -42,4 +43,5 @@
     </form>
 
     <a href="{{ url_for('index') }}">Back to Home</a>
-{% endblock %}
+</body>
+</html>
