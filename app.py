@@ -27,7 +27,16 @@ def index():
     user_id = session.get('user_id')
     print(f"User ID from session: {user_id}")  # Debugging-Ausgabe
     categories = get_categories()  # Holen der Kategorien
-    return render_template('product_list.html', user_id=user_id, categories=categories)
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT * FROM products p JOIN Pictures pi ON p.picture_id = pi.pic_id")
+                products = cursor.fetchall()
+                return render_template('product_list.html', products = products, categories = categories, user_id = user_id)
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+    
 
 @app.route('/products')
 def product_list():
@@ -114,8 +123,42 @@ def register():
 
 @app.route('/cart')
 def cart():
-    """Zeigt den Warenkorb an."""
-    return render_template('cart.html')
+    cart_items = session.get('cart', [])
+    return render_template('cart.html', cart_items=cart_items)
+
+
+@app.route('/add_to_cart/<int:product_id>', methods=['POST'])
+def add_to_cart(product_id):
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT * FROM products WHERE product_id = %s", (product_id,))
+                product = cursor.fetchone()
+                
+                if product:
+                    # Check if the cart is in the session
+                    if 'cart' not in session:
+                        session['cart'] = []
+
+                    # Add the product to the cart
+                    session['cart'].append(product)
+                    session.modified = True
+
+                return redirect(url_for('cart'))  # Redirect to the cart page
+            
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+    
+@app.route('/remove_from_cart/<int:product_id>', methods=['POST'])
+def remove_from_cart(product_id):
+    cart = session.get('cart', [])
+    updated_cart = [item for item in cart if item['product_id'] != product_id]
+
+    session['cart'] = updated_cart
+    session.modified = True
+    return redirect(url_for('cart'))
+
+
 
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
