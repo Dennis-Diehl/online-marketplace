@@ -56,7 +56,13 @@ def product_detail(product_id):
     try:
         with get_db_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
-                cursor.execute("SELECT * FROM products p JOIN pictures pi ON p.picture_id = pi.pic_id WHERE product_id = %s", (product_id,))
+                cursor.execute("""
+                        SELECT p.*, s.website_url, pi.source
+                        FROM products p 
+                        JOIN Sellers s ON p.seller_id = s.seller_id 
+                        JOIN Pictures pi ON p.picture_id = pi.pic_id
+                        WHERE p.product_id = %s
+                    """, (product_id,))
                 product = cursor.fetchone()
                 return render_template('product_detail.html', product=product)
     except mysql.connector.Error as err:
@@ -70,6 +76,10 @@ def user_profile(user_id):
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
                 user = cursor.fetchone()
+
+                if user is None:
+                    return "User not found", 404
+                
                 return render_template('user_profile.html', user=user)
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
@@ -105,6 +115,7 @@ def register():
         password = request.form.get('password')
         email = request.form.get('email')
         hashed_password = generate_password_hash(password)
+        is_seller = 'is_seller' in request.form #Prüft, ob Kästchen für Verkäufer angeklickt ist
 
         try:
             with get_db_connection() as conn:
@@ -115,6 +126,17 @@ def register():
                         (username, hashed_password, today, email)
                     )
                     conn.commit()
+                    user_id = cursor.lastrowid  # Holen der ID des neu erstellten Benutzers
+
+                    if is_seller:
+                        shopname = request.form.get('shopname')
+                        website_url = request.form.get('website_url')
+                        cursor.execute(
+                            "INSERT INTO Sellers (seller_id, shopname, website_url) VALUES (%s, %s, %s)",
+                            (user_id, shopname, website_url)
+                        )
+                        conn.commit()
+                    session['user_id'] = user_id  # Setzt die Session-ID für den Benutzer
                     return redirect(url_for('login'))
         except mysql.connector.Error as err:
             return f"Database error: {err}", 500
@@ -243,10 +265,21 @@ def add_product(user_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Sellers WHERE seller_id = %s", (user_id,))
+        seller = cursor.fetchone()
+
+        if not seller:
+            shopname = f"Shop von {name}"  # Standard-Name für den Shop
+            cursor.execute(
+                "INSERT INTO Sellers (seller_id, shopname) VALUES (%s, %s)",
+                (user_id, shopname)
+            )
+            conn.commit()
+                    
         cursor.execute("""
-            INSERT INTO Products (name, cost, available_copies, category_id, information, picture_id)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (name, cost, available_copies, category_id, information, picture_id))
+            INSERT INTO Products (name, cost, available_copies, category_id, information, picture_id, seller_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (name, cost, available_copies, category_id, information, picture_id, user_id))
         conn.commit()
         return redirect(url_for('user_profile', user_id=user_id))
     except mysql.connector.Error as err:
@@ -255,6 +288,22 @@ def add_product(user_id):
         cursor.close()
         conn.close()
 
+@app.route('/shop/<int:seller_id>')
+def view_shop(seller_id):
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT * FROM Sellers WHERE seller_id = %s", (seller_id,))
+                shop = cursor.fetchone()
+
+                cursor.execute("SELECT * FROM Products WHERE seller_id = %s", (seller_id,))
+                products = cursor.fetchall()
+
+                return render_template('shop.html', shop=shop, products=products)
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
+

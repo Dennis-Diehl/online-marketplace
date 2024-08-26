@@ -3,12 +3,22 @@
 {% block title %}{{ product.name }}{% endblock %}
 
 {% block content %}
-    <h1>{{ product.name }}</h1>
-    <img src="{{ url_for('static', filename=product.source) }}" alt="{{ product.name }}">
-    <p>${{ product.cost }}</p>
-    <p>{{ product.information }}</p>
-    <form method="post" action="{{ url_for('add_to_cart', product_id=product.product_id) }}">
-        <button type="submit">Add to Cart</button>
-    </form>
-    <a href="{{ url_for('product_list') }}">Back to Products</a>
+    <div>
+        <h1>{{ product.name }}</h1>
+        <img src="{{ url_for('static', filename = product.source) }}" alt="{{ product.name }}">
+        <p>${{ product.cost }}</p>
+        <p>{{ product.information }}</p>
+        <form method="post" action="{{ url_for('add_to_cart', product_id=product.product_id) }}">
+            <button type="submit">Add to Cart</button>
+        </form>
+        <a href="{{ url_for('product_list') }}">Back to Products</a>
+        {% if product.seller_id %}
+            <p>Visit the seller's shop: 
+                <a href="{{ url_for('view_shop', seller_id=product.seller_id) }}">
+                    {{ product.shopname }}
+                </a>
+            </p>
+        {% endif %}
+    
+    </div>
 {% endblock %}

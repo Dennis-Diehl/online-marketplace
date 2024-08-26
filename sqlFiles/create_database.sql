@@ -33,6 +33,7 @@ CREATE TABLE Users (
 CREATE TABLE Sellers (
     seller_id INT PRIMARY KEY,
     shopname VARCHAR(255) NOT NULL,
+    website_url VARCHAR(255),
     rating DECIMAL(3, 2) CHECK (rating >= 0 AND rating <= 5),
     FOREIGN KEY (seller_id) REFERENCES Users(user_id)
 );
