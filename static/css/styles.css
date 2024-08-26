@@ -1,4 +1,4 @@
-/* Global styles */
+/* Globale Stile */
 body {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -9,7 +9,7 @@ body {
   min-height: 100vh;
 }
 
-/* Header and navigation */
+/* Header und Navigation */
 header {
   background-color: #003366; /* Helleres Marineblau */
   padding: 20px 0;
@@ -22,232 +22,127 @@ nav {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
-}
-
-nav .left-nav {
-  display: flex;
-  gap: 15px;
-}
-
-nav .center-nav input[type="text"] {
-  padding: 8px;
-  font-size: 16px;
-  width: 100%;
-  max-width: 400px;
-  border-radius: 15px;
-  border: 1px solid #ccc;
-}
-
-/* Container für das Dropdown-Menü */
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-/* Stil für den Dropdown-Button */
-.dropbtn {
-  background-color: #ffffff; /* Weißer Hintergrund */
-  color: rgb(0, 0, 0); /* Schwarzer Text */
-  padding: 10px 20px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  cursor: pointer;
-  pointer-events: none;
-  border-radius: 15px;
-}
-
-/* Stil für den Dropdown-Inhalt */
-.dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: #ffffff; /* Weißer Hintergrund */
-  min-width: 200px; /* Größere Breite für das Haupt-Dropdown-Menü */
-  z-index: 1;
-}
-
-/* Stil für die Links im Dropdown-Inhalt */
-.dropdown-content a {
-  color: rgb(0, 0, 0); /* Schwarzer Text */
-  padding: 12px 16px;
-  text-decoration: none; /* Keine Unterstreichung standardmäßig */
-  display: block;
-}
-
-/* Hover-Effekt für die Links im Dropdown-Inhalt */
-.dropdown-content a:hover {
-  background-color: #f0f0f0; /* Leicht grauer Hintergrund */
-  text-decoration: underline; /* Unterstreichen beim Hover */
-}
-
-/* Hover-Effekt für den Dropdown-Button */
-.dropdown:hover .dropbtn {
-  background-color: #f0f0f0; /* Leicht grauer Hintergrund */
-}
-
-/* Anzeigen des Dropdown-Inhalts bei Hover */
-.dropdown:hover .dropdown-content {
-  display: block;
-}
-
-/* Stil für das Untermenü */
-.dropdown-submenu {
   position: relative;
 }
 
-/* Stil für den Untermenü-Button */
-.submenu-btn {
-  background-color: #ffffff; /* Weißer Hintergrund */
-  color: rgb(0, 0, 0); /* Schwarzer Text */
-  padding: 10px 20px;
-  border: 1px solid #ccc;
-  cursor: pointer;
-  display: block;
-  width: 100%;
-  text-align: left;
+/* Links im Header */
+header a {
+  color: white; /* Setzt die Farbe für Links im Header auf Weiß */
+  text-decoration: none; /* Entfernt die Unterstreichung von Links */
 }
 
-/* Stil für den Untermenü-Inhalt */
-.submenu-content {
-  display: none;
-  position: absolute;
-  left: 100%;
-  top: 0;
-  background-color: #ffffff; /* Weißer Hintergrund */
-  min-width: 140px; /* Kleinere Breite für das Untermenü */
-  z-index: 1;
-}
-
-/* Stil für die Links im Untermenü-Inhalt */
-.submenu-content a {
-  color: rgb(0, 0, 0); /* Schwarzer Text */
-  padding: 10px 14px;
-  text-decoration: none; /* Keine Unterstreichung standardmäßig */
-  display: block;
-}
-
-/* Hover-Effekt für die Links im Untermenü-Inhalt */
-.submenu-content a:hover {
-  background-color: #f0f0f0; /* Leicht grauer Hintergrund */
-  text-decoration: underline; /* Unterstreichen beim Hover */
-}
-
-/* Anzeigen des Untermenü-Inhalts bei Hover über das übergeordnete Dropdown */
-.dropdown-submenu:hover .submenu-content {
-  display: block;
-}
-
-/* Sicherstellen, dass das Untermenü nur bei Hover über den Dropdown-Button angezeigt wird */
-.dropdown:hover .dropdown-submenu:hover .submenu-content {
-  display: block;
-}
-
-
-/* Container für Suchfeld und Button */
-.search-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%; /* Container nimmt den gesamten verfügbaren Platz ein */
-  max-width: 400px; /* Maximale Breite des Containers */
-}
-
-.search-container input[type="text"] {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
-  width: 100%; /* Nimmt den gesamten Platz innerhalb des Containers ein */
-  padding-right: 10px; /* Platz für den Button schaffen */
-  box-sizing: border-box;
-}
-
-.search-button {
-  position: absolute;
-  right: 10px; /* Abstand vom rechten Rand des Containers */
-  top: 50%; /* Vertikale Zentrierung */
-  transform: translateY(-50%); /* Vertikale Zentrierung */
-  /* transform: translateX(30%); */
-  right: 0%;
-  background-color: #f0f0f0;
-  border: 1px solid #ccc;
-  border-radius: 15px;
-  padding: 9px;
-  cursor: pointer;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1; /* Sicherstellen, dass der Button über dem Suchfeld liegt */
-  box-sizing: border-box; /* Box-Sizing hinzufügen, um das Padding und Border einzubeziehen */
-}
-
-.search-button i {
-  color: #000000; /* Farbe des Icons */
-  font-size: 16px;
-}
-
-.search-button:hover {
-  background-color: #ddd;
-}
-
-
-nav .right-nav {
-  display: flex;
-  gap: 15px;
-}
-
-nav a {
-  color: white;
-  text-decoration: none;
-  font-size: 16px;
-}
-
-nav a:hover {
+header a:hover {
+  color: #005599; /* Farbe beim Hover (z.B. etwas helleres Blau) */
   text-decoration: underline;
 }
 
-/* Main content area */
+header a:visited {
+  color: white; /* Farbe für besuchte Links */
+}
+
+/* Suchleiste im Header */
+.search-bar-container {
+  display: flex;
+  justify-content: center; /* Zentriert die Suchleiste innerhalb des Containers */
+  flex: 1;
+  max-width: 500px; /* Maximale Breite des Containers */
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  width: 100%; /* Nimmt die volle Breite des Containers ein */
+}
+
+.search-input {
+  flex: 1; /* Nimmt den gesamten verfügbaren Platz innerhalb des Containers ein */
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px 0 0 4px;
+  outline: none;
+}
+
+.search-button {
+  padding: 8px 16px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-left: none; /* Entfernt die linke Umrandung, um mit der Suchleiste zu verschmelzen */
+  background-color: #003366;
+  color: white;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+}
+
+.search-button:hover {
+  background-color: #005599; /* Hellerer Blauton beim Hover */
+}
+
+/* Filter-Button und Dropdown-Menü */
+.filter-container {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.filter-button {
+  background-color: #003366;
+  color: white;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.filter-button:hover {
+  background-color: #005599;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  top: 100%;
+  right: 0;
+}
+
+.dropdown-menu a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-menu a:hover {
+  background-color: #ddd;
+}
+
+.filter-container:hover .dropdown-menu {
+  display: block;
+}
+
+/* Hauptbereich für Inhalte */
 main {
   flex: 1;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column; /* Flex-Richtung ändern, um die Produkte oben anzuzeigen */
   padding: 20px;
   background-color: white;
   margin: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  position: relative; /* Damit der Filter-Button relativ zu main positioniert ist */
 }
 
-/* Footer */
-footer {
-  background-color: #003366;
-  color: white;
-  text-align: center;
-  padding: 10px 0;
-}
-
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  nav {
-      flex-direction: column;
-  }
-
-  nav .left-nav, nav .right-nav {
-      justify-content: center;
-  }
-}
-
-.sec {
-  margin-top: 20px;
-  padding: 10px;
-  overflow-x: auto; /* Ermöglicht horizontales Scrollen */
-  white-space: nowrap; /* Verhindert Umbruch der Produkte in die nächste Zeile */
-}
-
+/* Produkte-Grid */
 .product-grid {
   display: flex;
+  flex-wrap: wrap; /* Zeilenumbruch bei mehreren Produkten */
   gap: 20px; /* Abstand zwischen den Produkten */
+  justify-content:flex-start; /* Zentriert die Produkte in der Mitte */
+  margin-top: 0; /* Kein Abstand nach oben */
 }
 
 .product-item {
@@ -276,7 +171,26 @@ footer {
   text-decoration: underline;
 }
 
-img {
-    width: 200px; /* Setzt die Breite des Bildes auf 200 Pixel */
-    height:auto; /* Hält das Seitenverhältnis bei der Anpassung der Höhe */
+/* Footer */
+footer {
+  background-color: #003366;
+  color: white;
+  text-align: center;
+  padding: 10px 0;
+}
+
+/* Responsive Anpassungen */
+@media (max-width: 768px) {
+  nav {
+    flex-direction: column;
+  }
+
+  nav .left-nav, nav .right-nav {
+    justify-content: center;
+  }
+
+  .search-bar-container {
+    max-width: 100%; /* Sicherstellen, dass der Container bei kleinen Bildschirmen die volle Breite nutzt */
+    margin: 10px 0; /* Verkleinert den Abstand zum Header bei kleineren Bildschirmen */
+  }
 }
