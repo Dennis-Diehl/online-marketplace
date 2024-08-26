@@ -39,15 +39,31 @@ def index():
 
 @app.route('/products')
 def product_list():
-    """Zeigt eine Liste von Produkten an."""
+    """Zeigt eine Liste von Produkten an und ermöglicht die Sortierung."""
+    sort_by = request.args.get('sort_by', 'name_asc')  # Standardmäßig nach Namen aufsteigend sortieren
+
+    sort_options = {
+        'price_asc': 'p.cost ASC',
+        'price_desc': 'p.cost DESC',
+        'name_asc': 'p.name ASC',
+        'name_desc': 'p.name DESC'
+    }
+
+    order_by = sort_options.get(sort_by, 'p.name ASC')  # Standard-Sortierung
+
     try:
         with get_db_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
-                cursor.execute("SELECT * FROM products p JOIN Pictures pi ON p.picture_id = pi.pic_id")
+                cursor.execute(f"""
+                    SELECT * FROM products p 
+                    JOIN pictures pi ON p.picture_id = pi.pic_id 
+                    ORDER BY {order_by}
+                """)
                 products = cursor.fetchall()
                 return render_template('product_list.html', products=products)
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
+
 
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):

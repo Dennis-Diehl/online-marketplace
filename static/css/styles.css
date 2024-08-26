@@ -1,4 +1,4 @@
-/* Global styles */
+/* Globale Stile */
 body {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -9,7 +9,7 @@ body {
   min-height: 100vh;
 }
 
-/* Header and navigation */
+/* Header und Navigation */
 header {
   background-color: #003366; /* Helleres Marineblau */
   padding: 20px 0;
@@ -23,6 +23,21 @@ nav {
   margin: 0 auto;
   padding: 0 20px;
   position: relative;
+}
+
+/* Links im Header */
+header a {
+  color: white; /* Setzt die Farbe für Links im Header auf Weiß */
+  text-decoration: none; /* Entfernt die Unterstreichung von Links */
+}
+
+header a:hover {
+  color: #005599; /* Farbe beim Hover (z.B. etwas helleres Blau) */
+  text-decoration: underline;
+}
+
+header a:visited {
+  color: white; /* Farbe für besuchte Links */
 }
 
 /* Suchleiste im Header */
@@ -63,93 +78,71 @@ nav {
   background-color: #005599; /* Hellerer Blauton beim Hover */
 }
 
-/* Suchergebnisse Container */
-.search-results-container {
-  text-align: center; /* Zentriert die Überschrift */
-  margin-bottom: 20px; /* Abstand unter der Überschrift */
+/* Filter-Button und Dropdown-Menü */
+.filter-container {
+  position: absolute;
+  top: 20px;
+  right: 20px;
 }
 
-.search-results-container h1 {
-  margin-bottom: 20px; /* Abstand unter der Überschrift */
-}
-
-.product-grid {
-  display: flex;
-  flex-wrap: wrap; /* Zeilenumbruch bei mehreren Produkten */
-  gap: 20px; /* Abstand zwischen den Produkten */
-  justify-content: center; /* Zentriert die Produkte in der Mitte */
-}
-
-/* Falls nötig: Entferne oder passe andere Abstände an */
-
-
-/* Nav links */
-nav .left-nav {
-  display: flex;
-  gap: 15px;
-}
-
-nav .right-nav {
-  display: flex;
-  gap: 15px;
-}
-
-nav a {
+.filter-button {
+  background-color: #003366;
   color: white;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.filter-button:hover {
+  background-color: #005599;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  top: 100%;
+  right: 0;
+}
+
+.dropdown-menu a {
+  color: black;
+  padding: 12px 16px;
   text-decoration: none;
-  font-size: 16px;
+  display: block;
 }
 
-nav a:hover {
-  text-decoration: underline;
+.dropdown-menu a:hover {
+  background-color: #ddd;
 }
 
-/* Main content area */
+.filter-container:hover .dropdown-menu {
+  display: block;
+}
+
+/* Hauptbereich für Inhalte */
 main {
   flex: 1;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column; /* Flex-Richtung ändern, um die Produkte oben anzuzeigen */
   padding: 20px;
   background-color: white;
   margin: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  position: relative; /* Damit der Filter-Button relativ zu main positioniert ist */
 }
 
-/* Footer */
-footer {
-  background-color: #003366;
-  color: white;
-  text-align: center;
-  padding: 10px 0;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  nav {
-    flex-direction: column;
-  }
-
-  nav .left-nav, nav .right-nav {
-    justify-content: center;
-  }
-
-  .search-bar-container {
-    max-width: 100%; /* Sicherstellen, dass der Container bei kleinen Bildschirmen die volle Breite nutzt */
-    margin: 10px 0; /* Verkleinert den Abstand zum Header bei kleineren Bildschirmen */
-  }
-}
-
-.sec {
-  margin-top: 20px;
-  padding: 10px;
-  overflow-x: auto; /* Ermöglicht horizontales Scrollen */
-  white-space: nowrap; /* Verhindert Umbruch der Produkte in die nächste Zeile */
-}
-
+/* Produkte-Grid */
 .product-grid {
   display: flex;
+  flex-wrap: wrap; /* Zeilenumbruch bei mehreren Produkten */
   gap: 20px; /* Abstand zwischen den Produkten */
+  justify-content:flex-start; /* Zentriert die Produkte in der Mitte */
+  margin-top: 0; /* Kein Abstand nach oben */
 }
 
 .product-item {
@@ -178,7 +171,26 @@ footer {
   text-decoration: underline;
 }
 
-img {
-  width: 200px; /* Setzt die Breite des Bildes auf 200 Pixel */
-  height: auto; /* Hält das Seitenverhältnis bei der Anpassung der Höhe */
+/* Footer */
+footer {
+  background-color: #003366;
+  color: white;
+  text-align: center;
+  padding: 10px 0;
+}
+
+/* Responsive Anpassungen */
+@media (max-width: 768px) {
+  nav {
+    flex-direction: column;
+  }
+
+  nav .left-nav, nav .right-nav {
+    justify-content: center;
+  }
+
+  .search-bar-container {
+    max-width: 100%; /* Sicherstellen, dass der Container bei kleinen Bildschirmen die volle Breite nutzt */
+    margin: 10px 0; /* Verkleinert den Abstand zum Header bei kleineren Bildschirmen */
+  }
 }
