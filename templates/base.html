@@ -6,7 +6,6 @@
     <title>{% block title %}eBay Clone{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <header>
@@ -16,34 +15,10 @@
                 <a href="{{ url_for('cart') }}">Cart</a>
                 <a href="{{ url_for('checkout') }}">Checkout</a>
             </div>
-            <div class="center-nav">
-                <form action="{{ url_for('search') }}" method="get" class="search-form">
-                    <div class="search-container">
-                        <!-- Dropdown-Menü für Kategorien -->
-                        <div class="dropdown">
-                            <button class="dropbtn">Categories</button>
-                            <div class="dropdown-content">
-                                {% for category in categories %}
-                                    <div class="dropdown-submenu">
-                                        <button class="submenu-btn">{{ category.name }}</button>
-                                        <div class="submenu-content">
-                                            {% for subcategory in category.subcategories %}
-                                                <a href="{{ url_for('search', query=request.args.get('query'), category=subcategory.id) }}">
-                                                    {{ subcategory.name }}
-                                                </a>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <!-- Suchfeld -->
-                        <input type="text" name="query" placeholder="Search...">
-                        <!-- Such-Button -->
-                        <button type="submit" class="search-button">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
+            <div class="search-bar-container">
+                <form action="{{ url_for('search') }}" method="GET">
+                    <input type="text" name="query" placeholder="Search products..." class="search-input">
+                    <button type="submit" class="search-button">Search</button>
                 </form>
             </div>
             <div class="right-nav">
@@ -51,12 +26,10 @@
                     <a href="{{ url_for('user_profile', user_id=session['user_id']) }}">Profile</a>
                     <a href="{{ url_for('logout') }}">Logout</a>
                 {% else %}
-                    {% if request.endpoint == 'index' %}
-                        <a href="{{ url_for('login') }}">Login</a>
-                        <a href="{{ url_for('register') }}">Register</a>
-                    {% endif %}
+                    <a href="{{ url_for('login') }}">Login</a>
+                    <a href="{{ url_for('register') }}">Register</a>
                 {% endif %}
-            </div>
+            </div>            
         </nav>
     </header>
     

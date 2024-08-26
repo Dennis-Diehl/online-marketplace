@@ -26,14 +26,13 @@ def index():
     """Zeigt die Startseite an."""
     user_id = session.get('user_id')
     print(f"User ID from session: {user_id}")  # Debugging-Ausgabe
-    categories = get_categories()  # Holen der Kategorien
 
     try:
         with get_db_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute("SELECT * FROM products p JOIN Pictures pi ON p.picture_id = pi.pic_id")
                 products = cursor.fetchall()
-                return render_template('product_list.html', products = products, categories = categories, user_id = user_id)
+                return render_template('product_list.html', products = products, user_id = user_id)
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
     
@@ -169,30 +168,6 @@ def checkout():
 
     return render_template('checkout.html')
 
-@app.route('/search')
-def search():
-    """Behandelt Suchanfragen."""
-    query = request.args.get('query')
-    c_id = request.args.get('category')
-    
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                if c_id and c_id != 'all':
-                    cursor.execute(
-                        "SELECT * FROM products WHERE name LIKE %s AND c_id = %s",
-                        (f"%{query}%", c_id)
-                    )
-                else:
-                    cursor.execute(
-                        "SELECT * FROM products WHERE name LIKE %s",
-                        (f"%{query}%",)
-                    )
-                results = cursor.fetchall()
-                return render_template('search_results.html', results=results)
-    except mysql.connector.Error as err:
-        return f"Database error: {err}", 500
-
 
 @app.route('/logout')
 def logout():
@@ -200,36 +175,6 @@ def logout():
     session.pop('user_id', None)
     return redirect(url_for('index'))
 
-def get_categories():
-    """Holt alle Kategorien aus der Datenbank und organisiert sie in einem hierarchischen Format."""
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                cursor.execute("SELECT * FROM Category WHERE superiorc_id IS NULL")
-                root_categories = cursor.fetchall()
-
-                cursor.execute("SELECT * FROM Category WHERE superiorc_id IS NOT NULL")
-                sub_categories = cursor.fetchall()
-
-                subcategories_dict = {}
-                for sub in sub_categories:
-                    parent_id = sub['superiorc_id']
-                    if parent_id not in subcategories_dict:
-                        subcategories_dict[parent_id] = []
-                    subcategories_dict[parent_id].append({
-                        'id': sub['c_id'],
-                        'name': sub['name']
-                    })
-
-                # Hinzufügen der Unterkategorien zu den Wurzelkategorien
-                for cat in root_categories:
-                    cat['subcategories'] = subcategories_dict.get(cat['c_id'], [])
-
-                return root_categories
-
-    except mysql.connector.Error as err:
-        print(f"Database error: {err}")
-        return []
 
 @app.route('/add_product/<int:user_id>', methods=['POST'])
 def add_product(user_id):
@@ -254,6 +199,27 @@ def add_product(user_id):
     finally:
         cursor.close()
         conn.close()
+
+@app.route('/search')
+def search():
+    query = request.args.get('query', '').strip()
+    if query:
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor(dictionary=True) as cursor:
+                    # Suche nach Produkten, die den Suchbegriff im Namen enthalten
+                    cursor.execute("""
+                        SELECT * FROM products p 
+                        JOIN pictures pi ON p.picture_id = pi.pic_id 
+                        WHERE p.name LIKE %s
+                    """, ('%' + query + '%',))
+                    products = cursor.fetchall()
+                    return render_template('search_results.html', query=query, products=products)
+        except mysql.connector.Error as err:
+            return f"Database error: {err}", 500
+    else:
+        # Falls kein Suchbegriff eingegeben wurde, leere Ergebnisse anzeigen
+        return render_template('search_results.html', query=query, products=[])
 
 
 if __name__ == "__main__":
