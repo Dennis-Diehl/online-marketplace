@@ -194,3 +194,8 @@ footer {
     margin: 10px 0; /* Verkleinert den Abstand zum Header bei kleineren Bildschirmen */
   }
 }
+
+.product-detail img{
+  width: 18em;
+  height: auto;
+}
