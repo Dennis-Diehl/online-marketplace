@@ -162,4 +162,22 @@ FROM Messaging m
 JOIN Users s ON m.sender_id = s.user_id
 JOIN Users r ON m.receiver_id = r.user_id;
 
+-- korrelierte subquery
+SELECT c.name
+FROM Category c
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM Products p
+    WHERE p.category_id = c.c_id
+    AND p.available_copies > 0
+);
+
+-- unkorrelierte subquery
+SELECT name, cost
+FROM Products
+WHERE cost > (
+    SELECT AVG(cost)
+    FROM Products
+);
+
 
