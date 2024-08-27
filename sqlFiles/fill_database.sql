@@ -64,4 +64,8 @@ INSERT INTO Subscriptions (user_id, seller_id) VALUES
 -- Füge Nachrichten hinzu
 INSERT INTO Messaging (message, sender_id, receiver_id) VALUES 
 ('Hello, how are you?', 1, 2),
-('I\'m good, thank you!', 2, 1);
+("I\'m good, thank you!", 2, 1);
+
+
+
+

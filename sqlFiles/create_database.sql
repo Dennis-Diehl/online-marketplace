@@ -45,11 +45,9 @@ CREATE TABLE ShoppingCarts (
     FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
 
-
 CREATE TABLE Pictures (
     pic_id INT PRIMARY KEY AUTO_INCREMENT,
     source VARCHAR(255) NOT NULL
-    
 );
 
 CREATE TABLE Category (
@@ -138,3 +136,30 @@ CREATE TABLE Messaging (
     FOREIGN KEY (sender_id) REFERENCES Users(user_id),
     FOREIGN KEY (receiver_id) REFERENCES Users(user_id)
 );
+
+-- Erstellen des Views für Produktinformationen
+CREATE VIEW IF NOT EXISTS ProductInfo AS
+SELECT 
+    p.product_id AS ProductID,
+    p.name AS ProductName,
+    p.cost AS Cost,
+    p.available_copies AS AvailableCopies,
+    c.name AS CategoryName,
+    s.shopname AS SellerName
+FROM Products p
+JOIN Category c ON p.category_id = c.c_id
+JOIN Sellers s ON p.seller_id = s.seller_id;
+
+-- Erstellen des Views für Nachrichten zwischen Nutzern
+CREATE VIEW UserMessages AS
+SELECT 
+    m.m_id AS MessageID,
+    m.sending_date AS SendingDate,
+    m.message AS MessageContent,
+    s.username AS SenderUsername,
+    r.username AS ReceiverUsername
+FROM Messaging m
+JOIN Users s ON m.sender_id = s.user_id
+JOIN Users r ON m.receiver_id = r.user_id;
+
+
