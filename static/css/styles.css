@@ -7,84 +7,81 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  font-size: 1em; /* Basis-Schriftgröße von 16px */
 }
 
 /* Header und Navigation */
 header {
-  background-color: #003366; /* Helleres Marineblau */
-  padding: 20px 0;
+  background-color: #003366;
+  padding: 1.25em 0;
 }
 
 nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1200px;
+  max-width: 75em;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 1.25em;
   position: relative;
 }
 
 /* Links im Header */
 header a {
-  color: white; /* Setzt die Farbe für Links im Header auf Weiß */
-  text-decoration: none; /* Entfernt die Unterstreichung von Links */
+  color: white; 
+  text-decoration: none;
 }
 
 header a:hover {
-  color: #005599; /* Farbe beim Hover (z.B. etwas helleres Blau) */
+  color: #e4e4e4;
   text-decoration: underline;
-}
-
-header a:visited {
-  color: white; /* Farbe für besuchte Links */
 }
 
 /* Suchleiste im Header */
 .search-bar-container {
   display: flex;
-  justify-content: center; /* Zentriert die Suchleiste innerhalb des Containers */
+  justify-content: center;
   flex: 1;
-  max-width: 500px; /* Maximale Breite des Containers */
+  max-width: 31.25em;
 }
 
 .search-bar {
   display: flex;
   align-items: center;
-  width: 100%; /* Nimmt die volle Breite des Containers ein */
+  width: 100%;
 }
 
 .search-input {
-  flex: 1; /* Nimmt den gesamten verfügbaren Platz innerhalb des Containers ein */
-  padding: 8px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 4px 0 0 4px;
+  flex: 1;
+  padding: 0.5em;
+  font-size: 1em;
+  border: 0.0625em solid #ccc;
+  border-radius: 0.25em 0 0 0.25em;
   outline: none;
 }
 
 .search-button {
-  padding: 8px 16px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-left: none; /* Entfernt die linke Umrandung, um mit der Suchleiste zu verschmelzen */
+  padding: 0.5em 1em;
+  font-size: 1em;
+  border: 0.0625em solid #ccc;
+  border-left: none;
   background-color: #003366;
   color: white;
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 0.25em 0.25em 0;
   cursor: pointer;
 }
 
 .search-button:hover {
-  background-color: #005599; /* Hellerer Blauton beim Hover */
+  background-color: #005599; 
 }
 
-/* Filter-Button und Dropdown-Menü */
+/* Filter-Button und dessen Dropdown-Menü */
 .filter-container {
   position: absolute;
-  top: 20px;
-  left: 20px; /* Buttons nach links verschieben */
+  top: 1.25em;
+  left: 1.25em;
   display: flex;
-  gap: 10px; /* Abstand zwischen den Buttons */
+  gap: 0.625em;
 }
 
 .dropdown {
@@ -94,10 +91,10 @@ header a:visited {
 .filter-button, .dropdown-button {
   background-color: #003366;
   color: white;
-  padding: 10px;
+  padding: 0.625em;
   border: none;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 0.25em;
 }
 
 .filter-button:hover, .dropdown-button:hover {
@@ -108,36 +105,22 @@ header a:visited {
   display: none;
   position: absolute;
   background-color: #f9f9f9;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  min-width: 10em;
+  box-shadow: 0em 0.5em 1em 0em rgba(0,0,0,0.2);
   z-index: 1;
   top: 100%;
-  left: 0; /* Setzt das Dropdown-Menü an die linke Kante des Buttons */
-  right: auto; /* Deaktiviert die Rechtsausrichtung */
-}
-
-/* Entfernen der bisherigen Anpassungen zur rechten Ausrichtung */
-.dropdown-menu[data-align-right] {
   left: 0;
-  right: auto;
 }
-
 
 .dropdown-menu a {
   color: black;
-  padding: 12px 16px;
+  padding: 0.75em 1em;
   text-decoration: none;
   display: block;
 }
 
 .dropdown-menu a:hover {
   background-color: #ddd;
-}
-
-/* Nur das zugehörige Dropdown-Menü anzeigen */
-.dropdown:hover .dropdown-menu,
-.filter-button:hover + .dropdown-menu {
-  display: block;
 }
 
 .dropdown-item {
@@ -148,10 +131,10 @@ header a:visited {
   display: none;
   position: absolute;
   background-color: #f9f9f9;
-  min-width: 160px;
-  left: 100%; /* Positioniert das Sub-Menü direkt neben der Kategorie */
+  min-width: 10em;
+  left: 100%;
   top: 0;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  box-shadow: 0em 0.5em 1em 0em rgba(0,0,0,0.2);
 }
 
 .dropdown-item:hover .subcategory-menu {
@@ -162,45 +145,44 @@ header a:visited {
 main {
   flex: 1;
   display: flex;
-  flex-direction: column; /* Flex-Richtung ändern, um die Produkte oben anzuzeigen */
-  padding: 20px;
+  flex-direction: column;
+  padding: 1.25em;
   background-color: white;
-  margin: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  position: relative; /* Damit der Filter-Button relativ zu main positioniert ist */
+  margin: 1.25em;
+  box-shadow: 0 0 0.625em rgba(0, 0, 0, 0.1);
+  position: relative;
   overflow: auto;
 }
 
 /* Produkte-Grid */
 .product-grid {
   display: flex;
-  flex-wrap: wrap; /* Zeilenumbruch bei mehreren Produkten */
-  gap: 20px; /* Abstand zwischen den Produkten */
-  justify-content: flex-start; /* Produkte linksbündig */
-  margin-top: 60px; /* Erhöht den Abstand nach oben (Wert anpassen, je nach Bedarf) */
+  flex-wrap: wrap;
+  gap: 1.25em;
+  justify-content: flex-start;
+  margin-top: 3.75em;
 }
 
-
 .product-item {
-  flex: 0 0 auto; /* Verhindert das Schrumpfen der Produktboxen und sorgt dafür, dass sie nebeneinander bleiben */
+  flex: 0 0 auto;
   background-color: #f9f9f9;
-  padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  padding: 0.9375em;
+  border: 0.0625em solid #ddd;
+  border-radius: 0.5em;
   text-align: center;
-  width: 200px; /* Feste Breite für jedes Produkt */
+  width: 12.5em;
 }
 
 .product-item img {
   max-width: 100%;
   height: auto;
-  margin-bottom: 10px;
-  border-radius: 4px;
+  margin-bottom: 0.625em;
+  border-radius: 0.25em;
 }
 
 .product-item h3 {
-  font-size: 18px;
-  margin: 10px 0;
+  font-size: 1.125em;
+  margin: 0.625em 0;
 }
 
 .product-item a:hover {
@@ -212,11 +194,11 @@ footer {
   background-color: #003366;
   color: white;
   text-align: center;
-  padding: 10px 0;
+  padding: 0.625em 0;
 }
 
-/* Responsive Anpassungen */
-@media (max-width: 768px) {
+/* Anpassung für alle Bildschirme */
+@media (max-width: 75em) {
   nav {
     flex-direction: column;
   }
@@ -226,12 +208,12 @@ footer {
   }
 
   .search-bar-container {
-    max-width: 100%; /* Sicherstellen, dass der Container bei kleinen Bildschirmen die volle Breite nutzt */
-    margin: 10px 0; /* Verkleinert den Abstand zum Header bei kleineren Bildschirmen */
+    max-width: 100%;
+    margin: 0.625em 0;
   }
 }
 
-.product-detail img{
+.product-detail img {
   width: 18em;
   height: auto;
 }
