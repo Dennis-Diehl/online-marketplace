@@ -28,19 +28,47 @@ def index():
     print(f"User ID from session: {user_id}")  # Debugging-Ausgabe
 
     try:
+        # Abrufen der Kategorien
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("""
+                    SELECT c1.c_id AS category_id, c1.name AS category_name, c2.c_id AS subcategory_id, c2.name AS subcategory_name
+                    FROM Category c1
+                    LEFT JOIN Category c2 ON c2.superiorc_id = c1.c_id
+                    WHERE c1.superiorc_id IS NULL
+                """)
+                results = cursor.fetchall()
+
+                categories = {}
+                for row in results:
+                    cat_id = row['category_id']
+                    if cat_id not in categories:
+                        categories[cat_id] = {
+                            'name': row['category_name'],
+                            'subcategories': []
+                        }
+                    if row['subcategory_id']:
+                        categories[cat_id]['subcategories'].append({
+                            'id': row['subcategory_id'],
+                            'name': row['subcategory_name']
+                        })
+
+        # Abrufen der Produkte
         with get_db_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute("SELECT * FROM products p JOIN Pictures pi ON p.picture_id = pi.pic_id")
                 products = cursor.fetchall()
-                return render_template('product_list.html', products = products, user_id = user_id)
+                return render_template('product_list.html', products=products, user_id=user_id, categories=categories)
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
+
     
 
 @app.route('/products')
 def product_list():
-    """Zeigt eine Liste von Produkten an und ermöglicht die Sortierung."""
+    """Zeigt eine Liste von Produkten an und ermöglicht die Sortierung sowie Filterung nach Kategorien."""
     sort_by = request.args.get('sort_by', 'name_asc')  # Standardmäßig nach Namen aufsteigend sortieren
+    category_id = request.args.get('category_id')  # Kategorie-Filter
 
     sort_options = {
         'price_asc': 'p.cost ASC',
@@ -54,34 +82,110 @@ def product_list():
     try:
         with get_db_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
-                cursor.execute(f"""
-                    SELECT * FROM products p 
-                    JOIN pictures pi ON p.picture_id = pi.pic_id 
-                    ORDER BY {order_by}
+                # Kategorien für das Dropdown-Menü abrufen
+                cursor.execute("""
+                    SELECT c1.c_id AS category_id, c1.name AS category_name, c2.c_id AS subcategory_id, c2.name AS subcategory_name
+                    FROM Category c1
+                    LEFT JOIN Category c2 ON c2.superiorc_id = c1.c_id
+                    WHERE c1.superiorc_id IS NULL
                 """)
+                results = cursor.fetchall()
+                
+                categories = {}
+                for row in results:
+                    cat_id = row['category_id']
+                    if cat_id not in categories:
+                        categories[cat_id] = {
+                            'name': row['category_name'],
+                            'subcategories': []
+                        }
+                    if row['subcategory_id']:
+                        categories[cat_id]['subcategories'].append({
+                            'id': row['subcategory_id'],
+                            'name': row['subcategory_name']
+                        })
+
+                # Alle Unterkategorien der ausgewählten Kategorie finden
+                if category_id:
+                    # Erstellen einer Liste für die IDs der Kategorien
+                    subcategory_ids = [category_id]
+
+                    # Schritt 1: Alle direkten Unterkategorien der ausgewählten Kategorie finden
+                    cursor.execute("""
+                        SELECT c_id
+                        FROM Category
+                        WHERE superiorc_id = %s
+                    """, (category_id,))
+                    subcategories = cursor.fetchall()
+                    
+                    # IDs der Unterkategorien sammeln
+                    while subcategories:
+                        new_subcategories = []
+                        for sub in subcategories:
+                            subcategory_ids.append(sub['c_id'])
+                            cursor.execute("""
+                                SELECT c_id
+                                FROM Category
+                                WHERE superiorc_id = %s
+                            """, (sub['c_id'],))
+                            new_subcategories.extend(cursor.fetchall())
+                        subcategories = new_subcategories
+                    
+                    # Produkte aus den Kategorien und Unterkategorien abrufen
+                    query = """
+                        SELECT p.*, pi.source 
+                        FROM products p 
+                        JOIN pictures pi ON p.picture_id = pi.pic_id 
+                        WHERE p.category_id IN (%s)
+                        ORDER BY %s
+                    """ % (','.join(['%s'] * len(subcategory_ids)), order_by)
+                    cursor.execute(query, tuple(subcategory_ids))
+                else:
+                    # Keine Kategorie ausgewählt, alle Produkte abrufen
+                    cursor.execute("""
+                        SELECT p.*, pi.source 
+                        FROM products p 
+                        JOIN pictures pi ON p.picture_id = pi.pic_id 
+                        ORDER BY %s
+                    """ % order_by)
+                
                 products = cursor.fetchall()
-                return render_template('product_list.html', products=products)
+
+                return render_template('product_list.html', products=products, categories=categories, sort_by=sort_by, category_id=category_id)
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
 
 
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
-    """Zeigt die Detailseite eines Produkts an."""
+    """Zeigt die Detailseite eines Produkts an, einschließlich Bewertungen."""
     try:
         with get_db_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
+                # Produktdetails abrufen
                 cursor.execute("""
-                        SELECT p.*, s.website_url, pi.source
-                        FROM products p 
-                        JOIN Sellers s ON p.seller_id = s.seller_id 
-                        JOIN Pictures pi ON p.picture_id = pi.pic_id
-                        WHERE p.product_id = %s
-                    """, (product_id,))
+                    SELECT p.*, s.website_url, pi.source
+                    FROM products p 
+                    JOIN Sellers s ON p.seller_id = s.seller_id 
+                    JOIN Pictures pi ON p.picture_id = pi.pic_id
+                    WHERE p.product_id = %s
+                """, (product_id,))
                 product = cursor.fetchone()
-                return render_template('product_detail.html', product=product)
+                
+                # Bewertungen abrufen
+                cursor.execute("""
+                    SELECT r.*, u.username
+                    FROM Reviews r
+                    JOIN Users u ON r.reviewer = u.user_id
+                    WHERE r.product_id = %s
+                    ORDER BY r.r_date DESC
+                """, (product_id,))
+                reviews = cursor.fetchall()
+
+                return render_template('product_detail.html', product=product, reviews=reviews)
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
+
 
 @app.route('/profile/<int:user_id>')
 def user_profile(user_id):
@@ -270,6 +374,29 @@ def search():
         # Falls kein Suchbegriff eingegeben wurde, leere Ergebnisse anzeigen
         return render_template('search_results.html', query=query, products=[])
 
+
+@app.route('/add_review/<int:product_id>', methods=['POST'])
+def add_review(product_id):
+    """Ermöglicht es angemeldeten Benutzern, eine Bewertung für ein Produkt hinzuzufügen."""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))  # Leitet nicht angemeldete Benutzer zur Login-Seite weiter
+    
+    rating = request.form.get('rating')
+    comment = request.form.get('comment')
+    user_id = session['user_id']
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO Reviews (rating, product_id, reviewer, comment)
+                    VALUES (%s, %s, %s, %s)
+                """, (rating, product_id, user_id, comment))
+                conn.commit()
+                return redirect(url_for('product_detail', product_id=product_id))
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+    
 
 if __name__ == "__main__":
     app.run(debug=True)

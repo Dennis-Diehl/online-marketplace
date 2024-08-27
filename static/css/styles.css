@@ -82,10 +82,16 @@ header a:visited {
 .filter-container {
   position: absolute;
   top: 20px;
-  right: 20px;
+  left: 20px; /* Buttons nach links verschieben */
+  display: flex;
+  gap: 10px; /* Abstand zwischen den Buttons */
 }
 
-.filter-button {
+.dropdown {
+  position: relative;
+}
+
+.filter-button, .dropdown-button {
   background-color: #003366;
   color: white;
   padding: 10px;
@@ -94,7 +100,7 @@ header a:visited {
   border-radius: 4px;
 }
 
-.filter-button:hover {
+.filter-button:hover, .dropdown-button:hover {
   background-color: #005599;
 }
 
@@ -106,8 +112,16 @@ header a:visited {
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
   z-index: 1;
   top: 100%;
-  right: 0;
+  left: 0; /* Setzt das Dropdown-Menü an die linke Kante des Buttons */
+  right: auto; /* Deaktiviert die Rechtsausrichtung */
 }
+
+/* Entfernen der bisherigen Anpassungen zur rechten Ausrichtung */
+.dropdown-menu[data-align-right] {
+  left: 0;
+  right: auto;
+}
+
 
 .dropdown-menu a {
   color: black;
@@ -120,7 +134,27 @@ header a:visited {
   background-color: #ddd;
 }
 
-.filter-container:hover .dropdown-menu {
+/* Nur das zugehörige Dropdown-Menü anzeigen */
+.dropdown:hover .dropdown-menu,
+.filter-button:hover + .dropdown-menu {
+  display: block;
+}
+
+.dropdown-item {
+  position: relative;
+}
+
+.subcategory-menu {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  left: 100%; /* Positioniert das Sub-Menü direkt neben der Kategorie */
+  top: 0;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+
+.dropdown-item:hover .subcategory-menu {
   display: block;
 }
 
@@ -134,6 +168,7 @@ main {
   margin: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   position: relative; /* Damit der Filter-Button relativ zu main positioniert ist */
+  overflow: auto;
 }
 
 /* Produkte-Grid */
@@ -141,9 +176,10 @@ main {
   display: flex;
   flex-wrap: wrap; /* Zeilenumbruch bei mehreren Produkten */
   gap: 20px; /* Abstand zwischen den Produkten */
-  justify-content:flex-start; /* Zentriert die Produkte in der Mitte */
-  margin-top: 0; /* Kein Abstand nach oben */
+  justify-content: flex-start; /* Produkte linksbündig */
+  margin-top: 60px; /* Erhöht den Abstand nach oben (Wert anpassen, je nach Bedarf) */
 }
+
 
 .product-item {
   flex: 0 0 auto; /* Verhindert das Schrumpfen der Produktboxen und sorgt dafür, dass sie nebeneinander bleiben */

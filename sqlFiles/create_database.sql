@@ -151,7 +151,7 @@ JOIN Category c ON p.category_id = c.c_id
 JOIN Sellers s ON p.seller_id = s.seller_id;
 
 -- Erstellen des Views für Nachrichten zwischen Nutzern
-CREATE VIEW UserMessages AS
+CREATE VIEW IF NOT EXISTS UserMessages AS
 SELECT 
     m.m_id AS MessageID,
     m.sending_date AS SendingDate,
@@ -161,5 +161,23 @@ SELECT
 FROM Messaging m
 JOIN Users s ON m.sender_id = s.user_id
 JOIN Users r ON m.receiver_id = r.user_id;
+
+-- korrelierte subquery
+SELECT c.name
+FROM Category c
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM Products p
+    WHERE p.category_id = c.c_id
+    AND p.available_copies > 0
+);
+
+-- unkorrelierte subquery
+SELECT name, cost
+FROM Products
+WHERE cost > (
+    SELECT AVG(cost)
+    FROM Products
+);
 
 
