@@ -151,7 +151,7 @@ JOIN Category c ON p.category_id = c.c_id
 JOIN Sellers s ON p.seller_id = s.seller_id;
 
 -- Erstellen des Views für Nachrichten zwischen Nutzern
-CREATE VIEW UserMessages AS
+CREATE VIEW IF NOT EXISTS UserMessages AS
 SELECT 
     m.m_id AS MessageID,
     m.sending_date AS SendingDate,
