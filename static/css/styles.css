@@ -1,3 +1,4 @@
+
 /* Globale Stile */
 body {
   font-family: Arial, sans-serif;
@@ -7,29 +8,28 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  font-size: 1em; /* Basis-Schriftgröße von 16px */
 }
 
 /* Header und Navigation */
 header {
   background-color: #003366;
-  padding: 1.25em 0;
+  padding: 20px 0;
 }
 
 nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 75em;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1.25em;
+  padding: 0 20px;
   position: relative;
 }
 
 /* Links im Header */
 header a {
   color: white; 
-  text-decoration: none;
+  text-decoration: none; /* Entfernt die Unterstreichung von Links */
 }
 
 header a:hover {
@@ -37,37 +37,38 @@ header a:hover {
   text-decoration: underline;
 }
 
+
 /* Suchleiste im Header */
 .search-bar-container {
   display: flex;
-  justify-content: center;
+  justify-content: center; /* Zentriert die Suchleiste innerhalb des Containers */
   flex: 1;
-  max-width: 31.25em;
+  max-width: 500px; /* Maximale Breite des Containers */
 }
 
 .search-bar {
   display: flex;
   align-items: center;
-  width: 100%;
+  width: 100%; /* Nimmt die volle Breite des Containers ein */
 }
 
 .search-input {
-  flex: 1;
-  padding: 0.5em;
-  font-size: 1em;
-  border: 0.0625em solid #ccc;
-  border-radius: 0.25em 0 0 0.25em;
+  flex: 1; /* Nimmt den gesamten verfügbaren Platz innerhalb des Containers ein */
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px 0 0 4px;
   outline: none;
 }
 
 .search-button {
-  padding: 0.5em 1em;
-  font-size: 1em;
-  border: 0.0625em solid #ccc;
-  border-left: none;
+  padding: 8px 16px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-left: none; /* Entfernt die linke Umrandung, um mit der Suchleiste zu verschmelzen */
   background-color: #003366;
   color: white;
-  border-radius: 0 0.25em 0.25em 0;
+  border-radius: 0 4px 4px 0;
   cursor: pointer;
 }
 
@@ -78,10 +79,10 @@ header a:hover {
 /* Filter-Button und dessen Dropdown-Menü */
 .filter-container {
   position: absolute;
-  top: 1.25em;
-  left: 1.25em;
+  top: 20px;
+  left: 20px; /* Buttons nach links verschieben */
   display: flex;
-  gap: 0.625em;
+  gap: 10px; /* Abstand zwischen den Buttons */
 }
 
 .dropdown {
@@ -91,10 +92,10 @@ header a:hover {
 .filter-button, .dropdown-button {
   background-color: #003366;
   color: white;
-  padding: 0.625em;
+  padding: 10px;
   border: none;
   cursor: pointer;
-  border-radius: 0.25em;
+  border-radius: 4px;
 }
 
 .filter-button:hover, .dropdown-button:hover {
@@ -105,22 +106,29 @@ header a:hover {
   display: none;
   position: absolute;
   background-color: #f9f9f9;
-  min-width: 10em;
-  box-shadow: 0em 0.5em 1em 0em rgba(0,0,0,0.2);
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
   z-index: 1;
   top: 100%;
-  left: 0;
+  left: 0; /* Setzt das Dropdown-Menü an die linke Kante des Buttons */
+  right: auto; /* Deaktiviert die Rechtsausrichtung */
 }
 
 .dropdown-menu a {
   color: black;
-  padding: 0.75em 1em;
+  padding: 12px 16px;
   text-decoration: none;
   display: block;
 }
 
 .dropdown-menu a:hover {
   background-color: #ddd;
+}
+
+/* Nur das zugehörige Dropdown-Menü anzeigen */
+.dropdown:hover .dropdown-menu,
+.filter-button:hover + .dropdown-menu {
+  display: block;
 }
 
 .dropdown-item {
@@ -131,10 +139,10 @@ header a:hover {
   display: none;
   position: absolute;
   background-color: #f9f9f9;
-  min-width: 10em;
-  left: 100%;
+  min-width: 160px;
+  left: 100%; /* Positioniert das Sub-Menü direkt neben der Kategorie */
   top: 0;
-  box-shadow: 0em 0.5em 1em 0em rgba(0,0,0,0.2);
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
 }
 
 .dropdown-item:hover .subcategory-menu {
@@ -145,44 +153,45 @@ header a:hover {
 main {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  padding: 1.25em;
+  flex-direction: column; /* Flex-Richtung ändern, um die Produkte oben anzuzeigen */
+  padding: 20px;
   background-color: white;
-  margin: 1.25em;
-  box-shadow: 0 0 0.625em rgba(0, 0, 0, 0.1);
-  position: relative;
+  margin: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  position: relative; 
   overflow: auto;
 }
 
 /* Produkte-Grid */
 .product-grid {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1.25em;
-  justify-content: flex-start;
-  margin-top: 3.75em;
+  flex-wrap: wrap; /* Zeilenumbruch bei mehreren Produkten */
+  gap: 20px; /* Abstand zwischen den Produkten */
+  justify-content: flex-start; /* Produkte linksbündig */
+  margin-top: 60px; /* Erhöht den Abstand nach oben */
 }
 
+
 .product-item {
-  flex: 0 0 auto;
+  flex: 0 0 auto; /* Verhindert das Schrumpfen der Produktboxen und sorgt dafür, dass sie nebeneinander bleiben */
   background-color: #f9f9f9;
-  padding: 0.9375em;
-  border: 0.0625em solid #ddd;
-  border-radius: 0.5em;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
   text-align: center;
-  width: 12.5em;
+  width: 200px; /* Feste Breite für jedes Produkt */
 }
 
 .product-item img {
   max-width: 100%;
   height: auto;
-  margin-bottom: 0.625em;
-  border-radius: 0.25em;
+  margin-bottom: 10px;
+  border-radius: 4px;
 }
 
 .product-item h3 {
-  font-size: 1.125em;
-  margin: 0.625em 0;
+  font-size: 18px;
+  margin: 10px 0;
 }
 
 .product-item a:hover {
@@ -194,11 +203,11 @@ footer {
   background-color: #003366;
   color: white;
   text-align: center;
-  padding: 0.625em 0;
+  padding: 10px 0;
 }
 
 /* Anpassung für alle Bildschirme */
-@media (max-width: 75em) {
+@media (max-width: 1200px) {
   nav {
     flex-direction: column;
   }
@@ -208,12 +217,12 @@ footer {
   }
 
   .search-bar-container {
-    max-width: 100%;
-    margin: 0.625em 0;
+    max-width: 100%; /* Sicherstellen, dass der Container bei kleinen Bildschirmen die volle Breite nutzt */
+    margin: 10px 0; /* Verkleinert den Abstand zum Header bei kleineren Bildschirmen */
   }
 }
 
-.product-detail img {
+.product-detail img{
   width: 18em;
   height: auto;
 }
