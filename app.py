@@ -159,6 +159,7 @@ def product_list():
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
     """Zeigt die Detailseite eines Produkts an, einschließlich Bewertungen."""
+    user_id = session.get('user_id')
     try:
         with get_db_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
@@ -182,9 +183,10 @@ def product_detail(product_id):
                 """, (product_id,))
                 reviews = cursor.fetchall()
 
-                return render_template('product_detail.html', product=product, reviews=reviews)
+                return render_template('product_detail.html', product=product, reviews=reviews, user_id=user_id)
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
+
 
 
 @app.route('/profile/<int:user_id>')
@@ -323,13 +325,15 @@ def add_product(user_id):
     name = request.form.get('name')
     cost = request.form.get('cost')
     available_copies = request.form.get('available_copies')
-    category_id = request.form.get('category_id')
+    category_name = request.form.get('category_name')  # Kategorienaame aus dem Formular holen
     information = request.form.get('information')
     picture_id = request.form.get('picture_id')
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
+
+        # Überprüfen, ob der Benutzer ein Verkäufer ist
         cursor.execute("SELECT * FROM Sellers WHERE seller_id = %s", (user_id,))
         seller = cursor.fetchone()
 
@@ -340,18 +344,30 @@ def add_product(user_id):
                 (user_id, shopname)
             )
             conn.commit()
-                    
+        
+        # Ermitteln der Kategorie-ID basierend auf dem Kategoriernamen
+        cursor.execute("SELECT c_id FROM Category WHERE name = %s", (category_name,))
+        category = cursor.fetchone()
+
+        if category:
+            category_id = category['c_id']
+        else:
+            return "Category not found", 404
+
+        # Hinzufügen des Produkts zur Datenbank
         cursor.execute("""
             INSERT INTO Products (name, cost, available_copies, category_id, information, picture_id, seller_id)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (name, cost, available_copies, category_id, information, picture_id, user_id))
         conn.commit()
+        
         return redirect(url_for('user_profile', user_id=user_id))
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
     finally:
         cursor.close()
         conn.close()
+
 
 @app.route('/search')
 def search():
@@ -396,6 +412,37 @@ def add_review(product_id):
                 return redirect(url_for('product_detail', product_id=product_id))
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
+    
+@app.route('/delete_review/<int:review_id>', methods=['POST'])
+def delete_review(review_id):
+    """Ermöglicht es Benutzern, ihre eigene Bewertung zu löschen."""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))  # Leitet nicht angemeldete Benutzer zur Login-Seite weiter
+
+    user_id = session['user_id']
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                # Überprüfen, ob der Benutzer die Bewertung verfasst hat
+                cursor.execute("""
+                    SELECT reviewer FROM Reviews WHERE r_id = %s
+                """, (review_id,))
+                review = cursor.fetchone()
+
+                if review and review['reviewer'] == user_id:
+                    cursor.execute("""
+                        DELETE FROM Reviews WHERE r_id = %s
+                    """, (review_id,))
+                    conn.commit()
+
+            # Redirect zur Detailseite des Produkts
+            product_id = request.form.get('product_id')
+            return redirect(url_for('product_detail', product_id=product_id))
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+
+
     
 
 if __name__ == "__main__":
