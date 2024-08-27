@@ -19,6 +19,14 @@
                         <strong>{{ review.username }}</strong> - {{ review.rating }} stars
                         <p>{{ review.comment }}</p>
                         <small>Reviewed on {{ review.r_date }}</small>
+
+                        <!-- Formular zum Löschen der Bewertung -->
+                        {% if review.reviewer == user_id %}
+                            <form method="post" action="{{ url_for('delete_review', review_id=review.r_id) }}">
+                                <input type="hidden" name="product_id" value="{{ product.product_id }}">
+                                <button type="submit">Delete Review</button>
+                            </form>
+                        {% endif %}
                     </li>
                 {% endfor %}
             </ul>
@@ -39,7 +47,6 @@
         {% else %}
             <p><a href="{{ url_for('login') }}">Log in</a> to write a review.</p>
         {% endif %}
-
 
         <!-- Link zurück zur Produktliste -->
         <a href="{{ url_for('product_list') }}">Back to Products</a>
