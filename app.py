@@ -158,21 +158,34 @@ def product_list():
 
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
-    """Zeigt die Detailseite eines Produkts an."""
+    """Zeigt die Detailseite eines Produkts an, einschließlich Bewertungen."""
     try:
         with get_db_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
+                # Produktdetails abrufen
                 cursor.execute("""
-                        SELECT p.*, s.website_url, pi.source
-                        FROM products p 
-                        JOIN Sellers s ON p.seller_id = s.seller_id 
-                        JOIN Pictures pi ON p.picture_id = pi.pic_id
-                        WHERE p.product_id = %s
-                    """, (product_id,))
+                    SELECT p.*, s.website_url, pi.source
+                    FROM products p 
+                    JOIN Sellers s ON p.seller_id = s.seller_id 
+                    JOIN Pictures pi ON p.picture_id = pi.pic_id
+                    WHERE p.product_id = %s
+                """, (product_id,))
                 product = cursor.fetchone()
-                return render_template('product_detail.html', product=product)
+                
+                # Bewertungen abrufen
+                cursor.execute("""
+                    SELECT r.*, u.username
+                    FROM Reviews r
+                    JOIN Users u ON r.reviewer = u.user_id
+                    WHERE r.product_id = %s
+                    ORDER BY r.r_date DESC
+                """, (product_id,))
+                reviews = cursor.fetchall()
+
+                return render_template('product_detail.html', product=product, reviews=reviews)
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
+
 
 @app.route('/profile/<int:user_id>')
 def user_profile(user_id):
@@ -361,6 +374,29 @@ def search():
         # Falls kein Suchbegriff eingegeben wurde, leere Ergebnisse anzeigen
         return render_template('search_results.html', query=query, products=[])
 
+
+@app.route('/add_review/<int:product_id>', methods=['POST'])
+def add_review(product_id):
+    """Ermöglicht es angemeldeten Benutzern, eine Bewertung für ein Produkt hinzuzufügen."""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))  # Leitet nicht angemeldete Benutzer zur Login-Seite weiter
+    
+    rating = request.form.get('rating')
+    comment = request.form.get('comment')
+    user_id = session['user_id']
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO Reviews (rating, product_id, reviewer, comment)
+                    VALUES (%s, %s, %s, %s)
+                """, (rating, product_id, user_id, comment))
+                conn.commit()
+                return redirect(url_for('product_detail', product_id=product_id))
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+    
 
 if __name__ == "__main__":
     app.run(debug=True)

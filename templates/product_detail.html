@@ -4,15 +4,45 @@
 
 {% block content %}
     <div>
-        <h1>{{ product.name }}</h1>
-        <img src="{{ url_for('static', filename = product.source) }}" alt="{{ product.name }}">
-        <p>${{ product.cost }}</p>
-        <p>{{ product.information }}</p>
-        <form method="post" action="{{ url_for('add_to_cart', product_id=product.product_id) }}">
-            <button type="submit">Add to Cart</button>
-        </form>
-        <a href="{{ url_for('product_list') }}">Back to Products</a>
-       
-    
+        <!-- Produktdetails anzeigen -->
+<h1>{{ product.name }}</h1>
+<img src="{{ url_for('static', filename=product.source) }}" alt="{{ product.name }}">
+<p>${{ product.cost }}</p>
+<p>{{ product.information }}</p>
+
+<!-- Bewertungen anzeigen -->
+<h2>Reviews</h2>
+{% if reviews %}
+    <ul>
+        {% for review in reviews %}
+            <li>
+                <strong>{{ review.username }}</strong> - {{ review.rating }} stars
+                <p>{{ review.comment }}</p>
+                <small>Reviewed on {{ review.r_date }}</small>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No reviews yet.</p>
+{% endif %}
+
+<!-- Formular zur Bewertung hinzufügen -->
+{% if 'user_id' in session %}
+    <h2>Write a Review</h2>
+    <form method="post" action="{{ url_for('add_review', product_id=product.product_id) }}">
+        <label for="rating">Rating (1-5):</label>
+        <input type="number" id="rating" name="rating" min="1" max="5" required>
+        <label for="comment">Comment:</label>
+        <textarea id="comment" name="comment" rows="4" required></textarea>
+        <button type="submit">Submit Review</button>
+    </form>
+{% else %}
+    <p><a href="{{ url_for('login') }}">Log in</a> to write a review.</p>
+{% endif %}
+
+
+<!-- Link zurück zur Produktliste -->
+<a href="{{ url_for('product_list') }}">Back to Products</a>
+
     </div>
 {% endblock %}
