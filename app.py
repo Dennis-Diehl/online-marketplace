@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, flash, render_template, request, redirect, url_for, session
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date
@@ -187,7 +187,7 @@ def product_detail(product_id):
         return f"Database error: {err}", 500
 
 
-@app.route('/profile/<int:user_id>')
+@app.route('/profile/<int:user_id>', methods = ['POST', 'GET'])
 def user_profile(user_id):
     """Zeigt das Profil eines Benutzers an."""
     try:
@@ -199,7 +199,23 @@ def user_profile(user_id):
                 if user is None:
                     return "User not found", 404
                 
-                return render_template('user_profile.html', user=user)
+                cursor.execute("SELECT * FROM Sellers WHERE seller_id = %s", (user_id,))
+                seller = cursor.fetchone()
+            
+                if  request.method == 'POST' and 'is_seller' in request.form and not seller:
+                    shopname = request.form.get('shopname')
+                    cursor.execute(
+                        "INSERT INTO Sellers (seller_id, shopname) VALUES (%s, %s)",
+                        (user_id, shopname)
+                    )
+                    conn.commit()
+                    flash('You have been registered as a seller!', 'success')
+                    return redirect(url_for('user_profile'), user_id = user_id)
+                
+            conn.commit()
+        session['user_id'] = user_id 
+        return render_template('user_profile.html', user=user, seller = seller)
+    
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
 
@@ -323,16 +339,16 @@ def add_product(user_id):
     name = request.form.get('name')
     cost = request.form.get('cost')
     available_copies = request.form.get('available_copies')
-    category_id = request.form.get('category_id')
+    category_name = request.form.get('category_name')
     information = request.form.get('information')
     picture_id = request.form.get('picture_id')
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT * FROM Sellers WHERE seller_id = %s", (user_id,))
         seller = cursor.fetchone()
-
+        
         if not seller:
             shopname = f"Shop von {name}"  # Standard-Name für den Shop
             cursor.execute(
@@ -340,12 +356,22 @@ def add_product(user_id):
                 (user_id, shopname)
             )
             conn.commit()
-                    
+
+        cursor.execute("SELECT c_id FROM Category WHERE name = %s",(category_name,))
+        category = cursor.fetchone()
+        
+        if category:
+            category_id = category['c_id']
+        else:
+            return "Category not found", 404
+
         cursor.execute("""
             INSERT INTO Products (name, cost, available_copies, category_id, information, picture_id, seller_id)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (name, cost, available_copies, category_id, information, picture_id, user_id))
         conn.commit()
+
+    
         return redirect(url_for('user_profile', user_id=user_id))
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
