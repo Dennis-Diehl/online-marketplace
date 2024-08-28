@@ -6,7 +6,7 @@
     <div class="product-detail">
         <!-- Produktdetails anzeigen -->
         <h1>{{ product.name }}</h1>
-        <img src="{{ url_for('static', filename=product.source) }}" alt="{{ product.name }}">
+        <img src="{{product.source}}" alt="{{ product.name }}">
         <p>${{ product.cost }}</p>
         <p>{{ product.information }}</p>
 

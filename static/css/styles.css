@@ -183,10 +183,11 @@ main {
 }
 
 .product-item img {
-  max-width: 100%;
-  height: auto;
+  width: 10em;
+  height: 10em;
   margin-bottom: 10px;
   border-radius: 4px;
+  object-fit: scale-down;
 }
 
 .product-item h3 {
@@ -223,6 +224,7 @@ footer {
 }
 
 .product-detail img{
-  width: 18em;
-  height: auto;
+  width: 10em;
+  height: 15em;
+  object-fit: scale-down;
 }

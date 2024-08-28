@@ -1,71 +1,67 @@
+INSERT INTO Users (username, password, email) VALUES
+('alice', 'password123', 'alice@example.com'),
+('bob', 'securepass', 'bob@example.com'),
+('carol', 'mypassword', 'carol@example.com');
 
+INSERT INTO Sellers (seller_id  , shopname, website_url, rating) VALUES
+(1, 'Tech Haven', 'http://techhaven.com', 4.5),
+(2, 'Book Nook', 'http://booknook.com', 4.2),
+(3, 'Gourmet Goods', 'http://gourmetgoods.com', 4.8);
 
--- Füge Benutzer hinzu
-INSERT INTO Users (user_id, username, password, email) VALUES 
-(1, 'john_doe', 'hashed_password_1', 'john@example.com'),
-(2, 'jane_smith', 'hashed_password_2', 'jane@example.com'),
-(3, 'fülle', 'hashed_password_2', 'fülle@example.com');
+INSERT INTO ShoppingCarts (user_id) VALUES
+(1),
+(2),
+(3);
 
--- Füge einige ShoppingCarts hinzu
-INSERT INTO ShoppingCarts (user_id, created_at) VALUES 
-(1, NOW()),
-(2, NOW());
+INSERT INTO Pictures (source) VALUES
+('https://cdn.idealo.com/folder/Product/203235/7/203235721/s1_produktbild_gross/apple-iphone-15.jpg'),
+('https://rukminim1.flixcart.com/image/300/300/l51d30w0/book/c/z/q/c-programming-language-comprehensive-book-2022-original-imagfsqwmhyepk7n.jpeg'),
+('https://oliveoillovers.com/cdn/shop/products/crete-gourmet-5L.jpg?v=1648218839');
 
--- Füge Verkäufer hinzu
-INSERT INTO Sellers (seller_id, shopname, rating) VALUES 
-(1, 'John\'s Store', 4.5),
-(2, 'Jane\'s Boutique', 3.8);
-
--- Füge einige Bilder hinzu
-INSERT INTO Pictures (source) VALUES 
-('images/Smartphone.jpg'),
-('images/Kopfhörer.jpg');
-
--- Füge Kategorien hinzu
-INSERT INTO Category (name, description, superiorc_id) VALUES 
+INSERT INTO Category (name, description, superiorc_id) VALUES
 ('Electronics', 'Devices and gadgets', NULL),
-('Books', 'Various kinds of books', 1);
+('Smartphones', 'Handy', 1),
+('Books', 'All kinds of books', NULL),
+('Food', 'Gourmet and everyday food items', NULL);
 
--- Füge Produkte hinzu
-INSERT INTO Products (picture_id, cost, available_copies, category_id, information, seller_id, name) VALUES 
-(1, 199.99, 10, 1, 'Latest model of smartphone.', 1, 'Smartphone'),
-(2, 30.99, 50, 2, 'Bluetooth Kopfhörer.', 2, 'Kopfhörer');
+INSERT INTO Products (picture_id, cost, available_copies, category_id, seller_id, name, information) VALUES
+(1, 299.99, 10, 2, 1, 'Smartphone XYZ', 'Latest model with high performance'),
+(2, 19.99, 100, 3, 2, 'Programming 101', 'A beginner\'s guide to programming'),
+(3, 5.99, 50, 4, 3, 'Gourmet Olive Oil', 'High quality olive oil from Italy');
 
--- Füge Bewertungen hinzu
-INSERT INTO Reviews (rating, product_id, reviewer, comment) VALUES 
-(5, 1, 1, 'Amazing smartphone!'),
-(4, 2, 2, 'Very informative book.');
+INSERT INTO Reviews (rating, product_id, reviewer, comment) VALUES
+(5, 1, 1, 'Excellent smartphone, highly recommend!'),
+(4, 2, 2, 'Great book for beginners, but a bit basic.'),
+(5, 3, 3, 'Best olive oil I have ever tasted!');
 
--- Füge Einkaufswagenartikel hinzu
-INSERT INTO ShoppingCartItems (position, cart_id, product_id, quantity) VALUES 
+INSERT INTO ShoppingCartItems (position, cart_id, product_id, quantity) VALUES
 (1, 1, 1, 1),
-(2, 2, 2, 2);
+(2, 2, 2, 3),
+(1, 3, 3, 2);
 
--- Füge Bestellungen hinzu
-INSERT INTO Orders (delivery_address, user_id, status, shopping_cart_id) VALUES 
-('123 Main St', 1,'completed', 1),
-('456 Elm St', 2, 'Pending', 2);
+INSERT INTO Orders (delivery_address, shopping_cart_id, user_id, status) VALUES
+('123 Elm Street', 1, 1, 'Shipped'),
+('456 Maple Avenue', 2, 2, 'Processing'),
+('789 Oak Drive', 3, 3, 'Delivered');
 
--- Füge Zahlungsmethoden hinzu
-INSERT INTO PaymentMethods (pm_name) VALUES 
+INSERT INTO PaymentMethods (pm_name) VALUES
 ('Credit Card'),
-('PayPal');
+('PayPal'),
+('Bank Transfer');
 
--- Füge Zahlungen hinzu
-INSERT INTO Payments (order_id, method_id) VALUES 
+INSERT INTO Payments (order_id, method_id, p_date) VALUES
+(1, 1, '2024-08-28'),
+(2, 2, '2024-08-28'),
+(3, 3, '2024-08-28');
+
+INSERT INTO Subscriptions (user_id, seller_id) VALUES
 (1, 1),
-(2, 2);
+(2, 2),
+(3, 3);
 
--- Füge Abonnements hinzu
-INSERT INTO Subscriptions (user_id, seller_id) VALUES 
-(1, 1),
-(2, 2);
+INSERT INTO Messaging (message, sender_id, receiver_id) VALUES
+('Hello, I have a question about your product.', 1, 2),
+('Thanks for your purchase!', 2, 1),
+('Can you provide more details on the delivery?', 3, 1);
 
--- Füge Nachrichten hinzu
-INSERT INTO Messaging (message, sender_id, receiver_id) VALUES 
-('Hello, how are you?', 1, 2),
-("I\'m good, thank you!", 2, 1);
-
-
-
-
+ 
