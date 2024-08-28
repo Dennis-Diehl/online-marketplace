@@ -4,16 +4,28 @@
 
 {% block content %}
     <h1>Checkout</h1>
+
+    <h2>Order Summary</h2>
+    <ul>
+        {% for item in cart_items %}
+            <li>{{ item.name }} - ${{ item.cost }}</li>
+        {% endfor %}
+    </ul>
+    <p><strong>Total:</strong> ${{ total_cost }}</p>
+
+    <h2>Shipping and Payment</h2>
     <form method="post" action="{{ url_for('checkout') }}">
-        <!-- Payment and shipping details -->
         <label for="address">Address:</label>
         <input type="text" id="address" name="address" required>
+
         <label for="payment_method">Payment Method:</label>
         <select id="payment_method" name="payment_method">
             <option value="credit_card">Credit Card</option>
             <option value="paypal">PayPal</option>
         </select>
+
         <button type="submit">Place Order</button>
     </form>
+
     <a href="{{ url_for('cart') }}">Back to Cart</a>
 {% endblock %}

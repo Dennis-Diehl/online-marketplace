@@ -18,6 +18,18 @@
         {% else %}
             <p><a href="{{ url_for('login') }}">Log in</a> to add the item to the cart.</p>
         {% endif %}
+
+        <!-- Check if the product is already in the wishlist -->
+        {% if product_in_wishlist %}
+            <form method="post" action="{{ url_for('remove_from_wishlist', product_id=product.product_id) }}">
+                <button type="submit">Remove from Wishlist</button>
+            </form>
+        {% else %}
+            <form method="post" action="{{ url_for('add_to_wishlist', product_id=product.product_id) }}">
+                <button type="submit">Add to Wishlist</button>
+            </form>
+        {% endif %}
+
         <!-- Bewertungen anzeigen -->
         <h2>Reviews</h2>
         {% if reviews %}

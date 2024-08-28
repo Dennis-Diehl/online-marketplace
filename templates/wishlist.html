@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}My Wishlist{% endblock %}
+
+{% block content %}
+    <h1>My Wishlist</h1>
+
+    {% if wishlist_items %}
+        <ul class="wishlist">
+            {% for item in wishlist_items %}
+                <li>
+                    <img src="{{ item.source }}" alt="{{ item.name }}">
+                    <strong>{{ item.name }}</strong> - ${{ item.cost }}
+                    <p>{{ item.information }}</p>
+                    <form method="post" action="{{ url_for('remove_from_wishlist', product_id=item.product_id) }}">
+                        <button type="submit">Remove from Wishlist</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Your wishlist is empty.</p>
+    {% endif %}
+    
+    <a href="{{ url_for('product_list') }}">Back to Products</a>
+{% endblock %}

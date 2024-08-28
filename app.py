@@ -183,7 +183,16 @@ def product_detail(product_id):
                 """, (product_id,))
                 reviews = cursor.fetchall()
 
-                return render_template('product_detail.html', product=product, reviews=reviews, user_id=user_id)
+                product_in_wishlist = False
+                if user_id:
+                    # Überprüfen, ob das Produkt in der Wunschliste des Benutzers ist
+                    cursor.execute("""
+                        SELECT * FROM Wishlist
+                        WHERE user_id = %s AND product_id = %s
+                    """, (user_id, product_id))
+                    product_in_wishlist = cursor.fetchone() is not None
+
+                return render_template('product_detail.html', product=product, reviews=reviews, user_id=user_id, product_in_wishlist=product_in_wishlist)
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
 
@@ -325,12 +334,31 @@ def remove_from_cart(product_id):
 
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
-    """Behandelt den Checkout-Prozess."""
+    """Handles the checkout process."""
+    if 'cart' not in session or not session['cart']:
+        flash('Your cart is empty!', 'warning')
+        return redirect(url_for('cart'))
+
+    cart_items = session.get('cart', [])
+    total_cost = sum(float(item['cost']) for item in cart_items)
+
     if request.method == 'POST':
-        # Placeholder für Checkout-Funktionalität
+        address = request.form.get('address')
+        payment_method = request.form.get('payment_method')
+
+        # Here, you would typically handle payment processing and store the order details
+        # For simplicity, let's assume the order is successfully placed
+
+        # Reset the cart
+        session.pop('cart', None)
+        session.modified = True
+
+        # Send order confirmation
+        flash('Your order has been placed successfully!', 'success')
         return redirect(url_for('index'))
 
-    return render_template('checkout.html')
+    return render_template('checkout.html', cart_items=cart_items, total_cost=total_cost)
+
 
 
 @app.route('/logout')
@@ -479,8 +507,74 @@ def delete_review(review_id):
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
 
-
+@app.route('/add_to_wishlist/<int:product_id>', methods=['POST'])
+def add_to_wishlist(product_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
     
+    user_id = session['user_id']
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                # Überprüfen, ob das Produkt bereits in der Wishlist ist
+                cursor.execute("SELECT * FROM Wishlist WHERE user_id = %s AND product_id = %s", (user_id, product_id))
+                existing_wishlist_item = cursor.fetchone()
+                
+                if not existing_wishlist_item:
+                    cursor.execute("INSERT INTO Wishlist (user_id, product_id) VALUES (%s, %s)", (user_id, product_id))
+                    conn.commit()
+                    flash('Product added to your wishlist!', 'success')
+                else:
+                    flash('Product is already in your wishlist!', 'info')
+                
+                return redirect(url_for('product_detail', product_id=product_id))
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+
+
+@app.route('/wishlist')
+def wishlist():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user_id = session['user_id']
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("""
+                    SELECT p.*, pi.source 
+                    FROM Wishlist w
+                    JOIN products p ON w.product_id = p.product_id
+                    JOIN pictures pi ON p.picture_id = pi.pic_id
+                    WHERE w.user_id = %s
+                """, (user_id,))
+                wishlist_items = cursor.fetchall()
+                
+                return render_template('wishlist.html', wishlist_items=wishlist_items)
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+
+
+@app.route('/remove_from_wishlist/<int:product_id>', methods=['POST'])
+def remove_from_wishlist(product_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("DELETE FROM Wishlist WHERE user_id = %s AND product_id = %s", (user_id, product_id))
+                conn.commit()
+                flash('Product removed from your wishlist.', 'success')
+                return redirect(url_for('product_detail', product_id = product_id))
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

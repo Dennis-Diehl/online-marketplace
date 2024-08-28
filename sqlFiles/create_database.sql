@@ -72,6 +72,14 @@ CREATE TABLE Products (
     FOREIGN KEY (seller_id) REFERENCES Sellers(seller_id)
 );
 
+CREATE TABLE Wishlist (
+    wishlist_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    product_id INT,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+    FOREIGN KEY (product_id) REFERENCES Products(product_id)
+);
+
 CREATE TABLE Reviews (
     r_id INT PRIMARY KEY AUTO_INCREMENT,
     rating INT CHECK (rating >= 1 AND rating <= 5),

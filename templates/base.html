@@ -8,6 +8,15 @@
     <script src="{{ url_for('static', filename='js/common.js') }}" defer></script>
 </head>
 <body>
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="flash-{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
     <header>
         <nav>
             <div class="left-nav">
@@ -24,6 +33,7 @@
             </div>
             <div class="right-nav">
                 {% if session.get('user_id') %}
+                    <a href="{{ url_for('wishlist') }}">Wishlist</a>
                     <a href="{{ url_for('user_profile', user_id=session['user_id']) }}">Profile</a>
                     <a href="{{ url_for('logout') }}">Logout</a>
                 {% else %}
