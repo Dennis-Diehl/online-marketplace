@@ -11,12 +11,26 @@
     <div>
         <h1>My Profile</h1>
         <h3>General data</h3>
+        
+        <!-- Display current user data -->
         <p>Username: {{ user.username }}</p>
         <p>Email: {{ user.email }}</p>
-        {% if seller %}
-        <h3>Add new product</h3>
-        <!-- Display flash messages -->
-        {% with messages = get_flashed_messages(with_categories=True) %}
+
+        <!-- Form to update username and/or email -->
+        <h3>Update Profile Information</h3>
+        
+        
+        <form method="POST" action="{{ url_for('update_profile', user_id=user.user_id) }}">
+            <label for="username">New Username:</label>
+            <input type="text" id="username" name="username" placeholder="enter new username">
+            
+            <label for="email">New Email:</label>
+            <input type="email" id="email" name="email" placeholder="enter new email">
+            
+            <button type="submit">Update Profile</button>
+            
+                    <!-- Display flash messages -->
+            {% with messages = get_flashed_messages(with_categories=True) %}
             {% if messages %}
                 <ul>
                     {% for category, message in messages %}
@@ -24,8 +38,12 @@
                     {% endfor %}
                 </ul>
             {% endif %}
-        {% endwith %}
-        
+            {% endwith %}
+    
+        </form>
+
+        {% if seller %}
+        <h3>Add new product</h3>
         
         <!-- Form to add a product -->
         <form method="post" action="{{ url_for('add_product', user_id=user.user_id) }}">
@@ -40,24 +58,25 @@
             <p>
                 <label for="category_name">Category Name:</label>
                 <input type="text" id="category_name" name="category_name" required>
-        
+            
                 <label for="information">Information:</label>
                 <textarea id="information" name="information"></textarea>
-        
+            
                 <label for="picture_url">Picture URL:</label>
                 <input type="text" id="picture_url" name="picture_url" required>
-        
+            
                 <p>
                     <button type="submit">Add Product</button>
                 </p>
             </p>
-        </form>
+            </form>
         {% endif %}
+        
         <p><a href="{{ url_for('index') }}">Back to Home</a></p>
 
         <!-- Formular für das Registrieren als Verkäufer -->
         {% if not seller %}
-                <form method="POST" action="{{ url_for('user_profile', user_id=user.user_id) }}">
+            <form method="POST" action="{{ url_for('user_profile', user_id=user.user_id) }}">
                 <h3>Become a Seller</h3>
                 <label for="is_seller">Register as Seller:</label>
                 <input type="checkbox" name="is_seller" id="is_seller"><br>
@@ -67,7 +86,7 @@
                 
                 <button type="submit">Become Seller</button>
             </form>
-            {% endif %}
+        {% endif %}
     </div>
 </body>
 </html>
