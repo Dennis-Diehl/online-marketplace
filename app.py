@@ -312,9 +312,12 @@ def add_to_cart(product_id):
 @app.route('/remove_from_cart/<int:product_id>', methods=['POST'])
 def remove_from_cart(product_id):
     cart = session.get('cart', [])
-    updated_cart = [item for item in cart if item['product_id'] != product_id]
+    for index, item in enumerate(cart):
+        if item['product_id'] == product_id:
+            del cart[index]
+            break 
 
-    session['cart'] = updated_cart
+    session['cart'] = cart
     session.modified = True
     return redirect(url_for('cart'))
 
@@ -344,7 +347,7 @@ def add_product(user_id):
     available_copies = request.form.get('available_copies')
     category_name = request.form.get('category_name')  # Kategorienaame aus dem Formular holen
     information = request.form.get('information')
-    pict_url = request.form.get('picture_url')
+    picture_id = request.form.get('picture_id')
 
     try:
         conn = get_db_connection()
@@ -361,28 +364,11 @@ def add_product(user_id):
                 (user_id, shopname)
             )
             conn.commit()
-
-        # Neues Produktbild hinzufügen
-        cursor.execute("""
-                       INSERT INTO Pictures (source)
-                       VALUES (%s)
-                       """,(pict_url,))
-        conn.commit()
-
-
+        
         # Ermitteln der Kategorie-ID basierend auf dem Kategoriernamen
         cursor.execute("SELECT c_id FROM Category WHERE name = %s", (category_name,))
         category = cursor.fetchone()
-        
 
-        cursor.execute("SELECT pic_id FROM Pictures ORDER BY pic_id DESC LIMIT 1")
-        pict = cursor.fetchone()
-
-        if pict:
-            picture_id = pict['pic_id']
-        else:
-            return "Picture not found", 404
-        
         if category:
             category_id = category['c_id']
         else:
