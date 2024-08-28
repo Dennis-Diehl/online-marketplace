@@ -387,7 +387,37 @@ def add_product(user_id):
     finally:
         cursor.close()
         conn.close()
+        
+@app.route('/delete_product/<int:product_id>', methods=['POST'])
+def delete_product(product_id):
+    """Allows a seller to delete their product."""
+    user_id = session.get('user_id')
+    
+    if not user_id:
+        return redirect(url_for('login'))  # Redirect to login if the user is not logged in
 
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                # Check if the product belongs to the logged-in seller
+                cursor.execute("""
+                    SELECT * FROM Products 
+                    WHERE product_id = %s AND seller_id = %s
+                """, (product_id, user_id))
+                product = cursor.fetchone()
+
+                if not product:
+                    return "Product not found or you don't have permission to delete it", 403
+                
+                # Delete the product
+                cursor.execute("DELETE FROM Products WHERE product_id = %s", (product_id,))
+                conn.commit()
+
+                flash('Product deleted successfully', 'success')
+                return redirect(url_for('user_profile', user_id=user_id))
+
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
 
 @app.route('/search')
 def search():
