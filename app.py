@@ -479,8 +479,55 @@ def delete_review(review_id):
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
 
+@app.route('/update_user/<int:user_id>', methods = ['POST', 'GET'])
+def update_profile(user_id):
+    #neue Daten abrufen
+    new_username = request.form.get('username')
+    new_email = request.form.get('email')
 
-    
+    try: 
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT username, email FROM Users WHERE user_id = %s", (user_id,))
+                user = cursor.fetchone()
+                
+                                # Überprüfen, ob neue Daten angegeben wurden
+                if not new_username and not new_email:
+                    flash("Please enter a new username or email to update.", 'warning')
+                    return redirect(url_for('user_profile', user_id=user_id))
+                
+                if user is None:
+                    flash ("user not found", 'error')
+                    return redirect(url_for('user_profile', user_id = user_id))
+                
+                if new_username == user['username']:
+                    flash ("the given username is already the current username. Please change it!", 'error')
+                    return redirect(url_for('user_profile', user_id = user_id))
+                
+                if new_email == user['email']:
+                    flash ("the given email is already the current email. Please change it!", 'error')
+                    return redirect(url_for('user_profile', user_id = user_id))
+                
+                if new_username and new_username != user['username']:
+                    cursor.execute("""UPDATE Users
+                                   SET username = %s
+                                   WHERE user_id = %s
+                                   """, (new_username, user_id))
+                    
+                if new_email and new_email != user['email']:
+                    cursor.execute("""UPDATE Users
+                                   SET email = %s
+                                   WHERE user_id = %s
+                                   """,(new_email, user_id))
+                
+                conn.commit()
+                flash('Your profile has been updated successfully', 'success')
+
+                return redirect(url_for('user_profile', user_id = user_id))
+            
+    except mysql.connector.Error as err:
+        flash(f"Database error: {err}", 'error')
+
 
 if __name__ == "__main__":
     app.run(debug=True)
