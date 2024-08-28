@@ -9,7 +9,7 @@
             <div class="product-grid">
                 {% for product in products %}
                     <div class="product-item">
-                        <img src="{{ url_for('static', filename=product['source']) }}" alt="{{ product['name'] }}">
+                        <img src="{{ product.source }}" alt="{{ product['name'] }}">
                         <h3>{{ product['name'] }}</h3>
                         <p>{{ product['cost'] }} $</p>
                         <a href="{{ url_for('product_detail', product_id=product['product_id']) }}">View Details</a>

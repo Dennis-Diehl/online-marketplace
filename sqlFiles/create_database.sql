@@ -47,7 +47,7 @@ CREATE TABLE ShoppingCarts (
 
 CREATE TABLE Pictures (
     pic_id INT PRIMARY KEY AUTO_INCREMENT,
-    source VARCHAR(255) NOT NULL
+    source VARCHAR(500) NOT NULL
 );
 
 CREATE TABLE Category (

@@ -40,11 +40,12 @@
         <div class="product-grid">
             {% for product in products %}
                 <div class="product-item">
-                    <img src="{{ url_for('static', filename=product.source) }}" alt="{{ product.name }}">
+                    <!-- Direktverlinkung zu einer Bildadresse im Internet -->
+                    <img src="{{ product.source }}" alt="{{ product.name }}">
                     <h3><a href="{{ url_for('product_detail', product_id=product.product_id) }}">{{ product.name }}</a></h3>
                     <p>${{ product.cost }}</p>
                 </div>
             {% endfor %}
-        </div>
+        </div>        
     </section>
 {% endblock %}
