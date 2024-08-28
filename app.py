@@ -312,9 +312,12 @@ def add_to_cart(product_id):
 @app.route('/remove_from_cart/<int:product_id>', methods=['POST'])
 def remove_from_cart(product_id):
     cart = session.get('cart', [])
-    updated_cart = [item for item in cart if item['product_id'] != product_id]
+    for index, item in enumerate(cart):
+        if item['product_id'] == product_id:
+            del cart[index]
+            break 
 
-    session['cart'] = updated_cart
+    session['cart'] = cart
     session.modified = True
     return redirect(url_for('cart'))
 
@@ -344,7 +347,7 @@ def add_product(user_id):
     available_copies = request.form.get('available_copies')
     category_name = request.form.get('category_name')  # Kategorienaame aus dem Formular holen
     information = request.form.get('information')
-    pict_url = request.form.get('picture_url')
+    picture_id = request.form.get('picture_id')
 
     try:
         conn = get_db_connection()
@@ -361,28 +364,11 @@ def add_product(user_id):
                 (user_id, shopname)
             )
             conn.commit()
-
-        # Neues Produktbild hinzufügen
-        cursor.execute("""
-                       INSERT INTO Pictures (source)
-                       VALUES (%s)
-                       """,(pict_url,))
-        conn.commit()
-
-
+        
         # Ermitteln der Kategorie-ID basierend auf dem Kategoriernamen
         cursor.execute("SELECT c_id FROM Category WHERE name = %s", (category_name,))
         category = cursor.fetchone()
-        
 
-        cursor.execute("SELECT pic_id FROM Pictures ORDER BY pic_id DESC LIMIT 1")
-        pict = cursor.fetchone()
-
-        if pict:
-            picture_id = pict['pic_id']
-        else:
-            return "Picture not found", 404
-        
         if category:
             category_id = category['c_id']
         else:
@@ -401,7 +387,37 @@ def add_product(user_id):
     finally:
         cursor.close()
         conn.close()
+        
+@app.route('/delete_product/<int:product_id>', methods=['POST'])
+def delete_product(product_id):
+    """Allows a seller to delete their product."""
+    user_id = session.get('user_id')
+    
+    if not user_id:
+        return redirect(url_for('login'))  # Redirect to login if the user is not logged in
 
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                # Check if the product belongs to the logged-in seller
+                cursor.execute("""
+                    SELECT * FROM Products 
+                    WHERE product_id = %s AND seller_id = %s
+                """, (product_id, user_id))
+                product = cursor.fetchone()
+
+                if not product:
+                    return "Product not found or you don't have permission to delete it", 403
+                
+                # Delete the product
+                cursor.execute("DELETE FROM Products WHERE product_id = %s", (product_id,))
+                conn.commit()
+
+                flash('Product deleted successfully', 'success')
+                return redirect(url_for('user_profile', user_id=user_id))
+
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
 
 @app.route('/search')
 def search():

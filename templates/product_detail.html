@@ -11,9 +11,13 @@
         <p>{{ product.information }}</p>
 
         <!-- Add to Cart Button -->
+        {% if 'user_id' in session %}
         <form method="post" action="{{ url_for('add_to_cart', product_id=product.product_id) }}">
             <button type="submit">Add to Cart</button>
         </form>
+        {% else %}
+            <p><a href="{{ url_for('login') }}">Log in</a> to add the item to the cart.</p>
+        {% endif %}
         <!-- Bewertungen anzeigen -->
         <h2>Reviews</h2>
         {% if reviews %}
