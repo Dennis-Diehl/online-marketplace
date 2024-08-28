@@ -189,3 +189,10 @@ WHERE cost > (
 );
 
 
+-- Index für die `category_id`-Spalte in der `Products`-Tabelle
+CREATE INDEX idx_category_id ON Products (category_id);
+
+-- Index für die `email`-Spalte in der `Users`-Tabelle
+CREATE INDEX idx_email ON Users (email);
+
+
