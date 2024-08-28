@@ -15,8 +15,13 @@ INSERT INTO ShoppingCarts (user_id) VALUES
 
 INSERT INTO Pictures (source) VALUES
 ('https://cdn.idealo.com/folder/Product/203235/7/203235721/s1_produktbild_gross/apple-iphone-15.jpg'),
+<<<<<<< HEAD
 ('https://cdn.kobo.com/book-images/121bee95-cb12-452d-8197-641880b47945/1200/1200/False/coding-3-manuscripts-in-1-book-python-for-beginners-python-3-guide-learn-java.jpg'),
 ('https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcRFQtuO8smTvQXneTtIQ85rlBXXp9bUFRYweHz8_u4iAC2Bcgf7kwwzoM8metTecHni2XpKhfmUGU9BuBqFN0D4wigdyks62obmjVZb4uIq21TYWOp9xIJwkw');
+=======
+('https://rukminim1.flixcart.com/image/300/300/l51d30w0/book/c/z/q/c-programming-language-comprehensive-book-2022-original-imagfsqwmhyepk7n.jpeg'),
+('https://oliveoillovers.com/cdn/shop/products/crete-gourmet-5L.jpg?v=1648218839');
+>>>>>>> 359d03de81781c65ae22d2e8aaedafe538b12251
 
 INSERT INTO Category (name, description, superiorc_id) VALUES
 ('Electronics', 'Devices and gadgets', NULL),
@@ -58,8 +63,18 @@ INSERT INTO Subscriptions (user_id, seller_id) VALUES
 (1, 1),
 (2, 2),
 (3, 3);
+<<<<<<< HEAD
 
 INSERT INTO Messaging (message, sender_id, receiver_id) VALUES
 ('Hello, I have a question about your product.', 1, 2),
 ('Thanks for your purchase!', 2, 1),
 ('Can you provide more details on the delivery?', 3, 1);
+=======
+
+INSERT INTO Messaging (message, sender_id, receiver_id) VALUES
+('Hello, I have a question about your product.', 1, 2),
+('Thanks for your purchase!', 2, 1),
+('Can you provide more details on the delivery?', 3, 1);
+
+ 
+>>>>>>> 359d03de81781c65ae22d2e8aaedafe538b12251
