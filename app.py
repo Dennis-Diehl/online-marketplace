@@ -222,7 +222,7 @@ def user_profile(user_id):
                     )
                     conn.commit()
                     flash('You have been registered as a seller!', 'success')
-                    return redirect(url_for('user_profile'), user_id = user_id)
+                    return redirect(url_for('user_profile', user_id = user_id))
                 
             conn.commit()
         session['user_id'] = user_id 
