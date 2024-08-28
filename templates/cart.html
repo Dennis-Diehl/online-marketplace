@@ -17,6 +17,8 @@
     </ul>
     {% if cart_items %}
     <a href="{{ url_for('checkout') }}">Checkout</a>
-    {%endif%}
-    <a href="{{ url_for('index') }}">Back to Home</a>
+    {% else %}
+    <p>There are no Items in the Shoppingcart. Add Items to the Cart to be able to Checkout.</p>
+    {% endif %}
+    <a href="{{ url_for('index') }}">Back to Products</a>
 {% endblock %}
