@@ -167,8 +167,8 @@ def product_detail(product_id):
                 cursor.execute("""
                     SELECT p.*, s.website_url, pi.source
                     FROM products p 
-                    JOIN Sellers s ON p.seller_id = s.seller_id 
-                    JOIN Pictures pi ON p.picture_id = pi.pic_id
+                    INNER JOIN Sellers s ON p.seller_id = s.seller_id 
+                    INNER JOIN Pictures pi ON p.picture_id = pi.pic_id
                     WHERE p.product_id = %s
                 """, (product_id,))
                 product = cursor.fetchone()
@@ -177,7 +177,7 @@ def product_detail(product_id):
                 cursor.execute("""
                     SELECT r.*, u.username
                     FROM Reviews r
-                    JOIN Users u ON r.reviewer = u.user_id
+                    INNER JOIN Users u ON r.reviewer = u.user_id
                     WHERE r.product_id = %s
                     ORDER BY r.r_date DESC
                 """, (product_id,))
