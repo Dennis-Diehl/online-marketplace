@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS Pictures;
 DROP TABLE IF EXISTS Category;
 DROP TABLE IF EXISTS PaymentMethods;
 DROP TABLE IF EXISTS Visitors;
+DROP TABLE IF EXISTS Wishlist;
 
 -- Wiederherstellen der Foreign Key Constraints
 SET FOREIGN_KEY_CHECKS = 1;
@@ -196,3 +197,28 @@ CREATE INDEX idx_category_id ON Products (category_id);
 CREATE INDEX idx_email ON Users (email);
 
 
+DELIMITER //
+
+CREATE TRIGGER delete_product_reviews
+AFTER DELETE ON Products
+FOR EACH ROW
+BEGIN
+    DELETE FROM Reviews WHERE product_id = OLD.product_id;
+END;
+//
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER update_product_available_copies_on_insert
+AFTER INSERT ON ShoppingCartItems
+FOR EACH ROW
+BEGIN
+    UPDATE Products
+    SET available_copies = available_copies - NEW.quantity
+    WHERE product_id = NEW.product_id;
+END;
+//
+
+DELIMITER ;
