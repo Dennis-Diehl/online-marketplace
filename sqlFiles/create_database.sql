@@ -222,3 +222,31 @@ END;
 //
 
 DELIMITER ;
+
+
+-- Stored Procedures
+
+DELIMITER //
+
+CREATE PROCEDURE AddProduct(
+    IN p_name VARCHAR(255),
+    IN p_cost DECIMAL(10,2),
+    IN p_available_copies INT,
+    IN p_category_id INT,
+    IN p_information TEXT,
+    IN p_seller_id INT,
+    IN p_picture_id INT
+)
+BEGIN
+    INSERT INTO Products (name, cost, available_copies, category_id, information, seller_id, picture_id)
+    VALUES (p_name, p_cost, p_available_copies, p_category_id, p_information, p_seller_id, p_picture_id);
+END //
+
+CREATE PROCEDURE GetProductsByCategory(IN p_category_id INT)
+BEGIN
+    SELECT product_id, name, cost, available_copies
+    FROM Products
+    WHERE category_id = p_category_id;
+END //
+
+DELIMITER ;

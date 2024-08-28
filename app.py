@@ -32,7 +32,7 @@ def index():
         with get_db_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute("""
-                    SELECT c1.c_id AS category_id, c1.name AS category_name, c2.c_id AS subcategory_id, c2.name AS subcategory_name
+                    SELECT DISTINCT c1.c_id AS category_id, c1.name AS category_name, c2.c_id AS subcategory_id, c2.name AS subcategory_name
                     FROM Category c1
                     LEFT JOIN Category c2 ON c2.superiorc_id = c1.c_id
                     WHERE c1.superiorc_id IS NULL
