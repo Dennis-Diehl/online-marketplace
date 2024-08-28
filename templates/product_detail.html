@@ -10,6 +10,10 @@
         <p>${{ product.cost }}</p>
         <p>{{ product.information }}</p>
 
+        <!-- Add to Cart Button -->
+        <form method="post" action="{{ url_for('add_to_cart', product_id=product.product_id) }}">
+            <button type="submit">Add to Cart</button>
+        </form>
         <!-- Bewertungen anzeigen -->
         <h2>Reviews</h2>
         {% if reviews %}
