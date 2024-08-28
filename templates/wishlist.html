@@ -8,14 +8,14 @@
     {% if wishlist_items %}
         <ul class="wishlist">
             {% for item in wishlist_items %}
-                <li>
+                <p>
                     <img src="{{ item.source }}" alt="{{ item.name }}">
-                    <strong>{{ item.name }}</strong> - ${{ item.cost }}
+                    <p><strong>{{ item.name }}</strong> - ${{ item.cost }}</p>
                     <p>{{ item.information }}</p>
                     <form method="post" action="{{ url_for('remove_from_wishlist', product_id=item.product_id) }}">
                         <button type="submit">Remove from Wishlist</button>
                     </form>
-                </li>
+                </p>
             {% endfor %}
         </ul>
     {% else %}

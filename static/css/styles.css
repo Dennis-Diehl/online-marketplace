@@ -231,6 +231,6 @@ footer {
 
 .wishlist img {
   width: 10em;
-  height: 15em;
-  object-fit: scale-down;
+  height: 10em;
+  object-fit:scale-down;
 }
