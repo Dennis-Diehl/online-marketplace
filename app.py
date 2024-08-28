@@ -312,9 +312,12 @@ def add_to_cart(product_id):
 @app.route('/remove_from_cart/<int:product_id>', methods=['POST'])
 def remove_from_cart(product_id):
     cart = session.get('cart', [])
-    updated_cart = [item for item in cart if item['product_id'] != product_id]
+    for index, item in enumerate(cart):
+        if item['product_id'] == product_id:
+            del cart[index]
+            break 
 
-    session['cart'] = updated_cart
+    session['cart'] = cart
     session.modified = True
     return redirect(url_for('cart'))
 
