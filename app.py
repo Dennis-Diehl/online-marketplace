@@ -445,6 +445,11 @@ def add_to_cart(product_id):
                 product = cursor.fetchone()
                 
                 if product:
+                    # Überprüfen, ob der Benutzer der Verkäufer des Produkts ist
+                    if product['seller_id'] == session.get('user_id'):
+                        flash('You cannot add your own product to the cart!', 'warning')
+                        return redirect(url_for('product_detail', product_id=product_id))
+
                     # Check if the cart is in the session
                     if 'cart' not in session:
                         session['cart'] = []
@@ -457,6 +462,7 @@ def add_to_cart(product_id):
             
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
+
     
 @app.route('/remove_from_cart/<int:product_id>', methods=['POST'])
 def remove_from_cart(product_id):
@@ -502,7 +508,6 @@ def checkout():
 
 @app.route('/add_review/<int:product_id>', methods=['POST'])
 def add_review(product_id):
-    """Ermöglicht es angemeldeten Benutzern, eine Bewertung für ein Produkt hinzuzufügen."""
     if 'user_id' not in session:
         return redirect(url_for('login'))  # Leitet nicht angemeldete Benutzer zur Login-Seite weiter
     
@@ -512,7 +517,17 @@ def add_review(product_id):
     
     try:
         with get_db_connection() as conn:
-            with conn.cursor() as cursor:
+            with conn.cursor(dictionary=True) as cursor:
+                # Überprüfen, ob der Benutzer der Verkäufer des Produkts ist
+                cursor.execute("""
+                    SELECT seller_id FROM products WHERE product_id = %s
+                """, (product_id,))
+                product = cursor.fetchone()
+                
+                if product and product['seller_id'] == user_id:
+                    flash('You cannot review your own product!', 'warning')
+                    return redirect(url_for('product_detail', product_id=product_id))
+                
                 cursor.execute("""
                     INSERT INTO Reviews (rating, product_id, reviewer, comment)
                     VALUES (%s, %s, %s, %s)
@@ -521,6 +536,7 @@ def add_review(product_id):
                 return redirect(url_for('product_detail', product_id=product_id))
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
+
     
 @app.route('/delete_review/<int:review_id>', methods=['POST'])
 def delete_review(review_id):
@@ -561,7 +577,17 @@ def add_to_wishlist(product_id):
     
     try:
         with get_db_connection() as conn:
-            with conn.cursor() as cursor:
+            with conn.cursor(dictionary=True) as cursor:
+                # Überprüfen, ob der Benutzer der Verkäufer des Produkts ist
+                cursor.execute("""
+                    SELECT seller_id FROM products WHERE product_id = %s
+                """, (product_id,))
+                product = cursor.fetchone()
+                
+                if product and product['seller_id'] == user_id:
+                    flash('You cannot add your own product to your wishlist!', 'warning')
+                    return redirect(url_for('product_detail', product_id=product_id))
+                
                 # Überprüfen, ob das Produkt bereits in der Wishlist ist
                 cursor.execute("SELECT * FROM Wishlist WHERE user_id = %s AND product_id = %s", (user_id, product_id))
                 existing_wishlist_item = cursor.fetchone()
@@ -576,6 +602,7 @@ def add_to_wishlist(product_id):
                 return redirect(url_for('product_detail', product_id=product_id))
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
+
 
 
 @app.route('/wishlist')
