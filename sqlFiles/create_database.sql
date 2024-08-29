@@ -18,6 +18,7 @@ DROP TABLE IF EXISTS Category;
 DROP TABLE IF EXISTS Wishlist;
 DROP TABLE IF EXISTS PaymentMethods;
 DROP TABLE IF EXISTS Visitors;
+DROP TABLE IF EXISTS Wishlist;
 
 -- Wiederherstellen der Foreign Key Constraints
 SET FOREIGN_KEY_CHECKS = 1;
@@ -197,3 +198,56 @@ CREATE INDEX idx_category_id ON Products (category_id);
 CREATE INDEX idx_email ON Users (email);
 
 
+DELIMITER //
+
+CREATE TRIGGER delete_product_reviews
+AFTER DELETE ON Products
+FOR EACH ROW
+BEGIN
+    DELETE FROM Reviews WHERE product_id = OLD.product_id;
+END;
+//
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER update_product_available_copies_on_insert
+AFTER INSERT ON ShoppingCartItems
+FOR EACH ROW
+BEGIN
+    UPDATE Products
+    SET available_copies = available_copies - NEW.quantity
+    WHERE product_id = NEW.product_id;
+END;
+//
+
+DELIMITER ;
+
+
+-- Stored Procedures
+
+DELIMITER //
+
+CREATE PROCEDURE AddProduct(
+    IN p_name VARCHAR(255),
+    IN p_cost DECIMAL(10,2),
+    IN p_available_copies INT,
+    IN p_category_id INT,
+    IN p_information TEXT,
+    IN p_seller_id INT,
+    IN p_picture_id INT
+)
+BEGIN
+    INSERT INTO Products (name, cost, available_copies, category_id, information, seller_id, picture_id)
+    VALUES (p_name, p_cost, p_available_copies, p_category_id, p_information, p_seller_id, p_picture_id);
+END //
+
+CREATE PROCEDURE GetProductsByCategory(IN p_category_id INT)
+BEGIN
+    SELECT product_id, name, cost, available_copies
+    FROM Products
+    WHERE category_id = p_category_id;
+END //
+
+DELIMITER ;

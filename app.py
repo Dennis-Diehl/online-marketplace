@@ -32,7 +32,7 @@ def index():
         with get_db_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute("""
-                    SELECT c1.c_id AS category_id, c1.name AS category_name, c2.c_id AS subcategory_id, c2.name AS subcategory_name
+                    SELECT DISTINCT c1.c_id AS category_id, c1.name AS category_name, c2.c_id AS subcategory_id, c2.name AS subcategory_name
                     FROM Category c1
                     LEFT JOIN Category c2 ON c2.superiorc_id = c1.c_id
                     WHERE c1.superiorc_id IS NULL
@@ -62,6 +62,174 @@ def index():
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
 
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Behandelt die Anmeldung der Benutzer."""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor(dictionary=True) as cursor:
+                    cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
+                    user = cursor.fetchone()
+
+                    if user and check_password_hash(user['password'], password):
+                        session['user_id'] = user['user_id']
+                        return redirect(url_for('index'))
+                    else:
+                        return "Invalid username or password", 401
+        except mysql.connector.Error as err:
+            return f"Database error: {err}", 500
+
+    return render_template('login.html')
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """Behandelt die Registrierung neuer Benutzer."""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        email = request.form.get('email')
+        hashed_password = generate_password_hash(password)
+        is_seller = 'is_seller' in request.form #Prüft, ob Kästchen für Verkäufer angeklickt ist
+
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor() as cursor:
+                    today = str(date.today())
+                    cursor.execute(
+                        "INSERT INTO users (username, password, acc_creation_date, email) VALUES (%s, %s, %s, %s)",
+                        (username, hashed_password, today, email)
+                    )
+                    conn.commit()
+                    user_id = cursor.lastrowid  # Holen der ID des neu erstellten Benutzers
+
+                    if is_seller:
+                        shopname = request.form.get('shopname')
+                        website_url = request.form.get('website_url')
+                        cursor.execute(
+                            "INSERT INTO Sellers (seller_id, shopname, website_url) VALUES (%s, %s, %s)",
+                            (user_id, shopname, website_url)
+                        )
+                        conn.commit()
+                    session['user_id'] = user_id  # Setzt die Session-ID für den Benutzer
+                    return redirect(url_for('login'))
+        except mysql.connector.Error as err:
+            return f"Database error: {err}", 500
+
+    return render_template('register.html')
+
+@app.route('/logout')
+def logout():
+    """Behandelt das Logout der Benutzer und leitet zur Startseite weiter."""
+    session.pop('user_id', None)
+    return redirect(url_for('index'))
+
+@app.route('/profile/<int:user_id>', methods = ['POST', 'GET'])
+def user_profile(user_id):
+    """Zeigt das Profil eines Benutzers an."""
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
+                user = cursor.fetchone()
+
+                if user is None:
+                    return "User not found", 404
+                
+                cursor.execute("SELECT * FROM Sellers WHERE seller_id = %s", (user_id,))
+                seller = cursor.fetchone()
+            
+                if  request.method == 'POST' and 'is_seller' in request.form and not seller:
+                    shopname = request.form.get('shopname')
+                    cursor.execute(
+                        "INSERT INTO Sellers (seller_id, shopname) VALUES (%s, %s)",
+                        (user_id, shopname)
+                    )
+                    conn.commit()
+                    flash('You have been registered as a seller!', 'success')
+                    return redirect(url_for('user_profile', user_id = user_id))
+                
+            conn.commit()
+        session['user_id'] = user_id 
+        return render_template('user_profile.html', user=user, seller = seller)
+    
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+
+@app.route('/update_user/<int:user_id>', methods = ['POST', 'GET'])
+def update_profile(user_id):
+    #neue Daten abrufen
+    new_username = request.form.get('username')
+    new_email = request.form.get('email')
+
+    try: 
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT username, email FROM Users WHERE user_id = %s", (user_id,))
+                user = cursor.fetchone()
+                
+                                # Überprüfen, ob neue Daten angegeben wurden
+                if not new_username and not new_email:
+                    flash("Please enter a new username or email to update.", 'warning')
+                    return redirect(url_for('user_profile', user_id=user_id))
+                
+                if user is None:
+                    flash ("user not found", 'error')
+                    return redirect(url_for('user_profile', user_id = user_id))
+                
+                if new_username == user['username']:
+                    flash ("the given username is already the current username. Please change it!", 'error')
+                    return redirect(url_for('user_profile', user_id = user_id))
+                
+                if new_email == user['email']:
+                    flash ("the given email is already the current email. Please change it!", 'error')
+                    return redirect(url_for('user_profile', user_id = user_id))
+                
+                if new_username and new_username != user['username']:
+                    cursor.execute("""UPDATE Users
+                                   SET username = %s
+                                   WHERE user_id = %s
+                                   """, (new_username, user_id))
+                    
+                if new_email and new_email != user['email']:
+                    cursor.execute("""UPDATE Users
+                                   SET email = %s
+                                   WHERE user_id = %s
+                                   """,(new_email, user_id))
+                
+                conn.commit()
+                flash('Your profile has been updated successfully', 'success')
+
+                return redirect(url_for('user_profile', user_id = user_id))
+            
+    except mysql.connector.Error as err:
+        flash(f"Database error: {err}", 'error')
+
+@app.route('/search')
+def search():
+    query = request.args.get('query', '').strip()
+    if query:
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor(dictionary=True) as cursor:
+                    # Suche nach Produkten, die den Suchbegriff im Namen enthalten
+                    cursor.execute("""
+                        SELECT * FROM products p 
+                        JOIN pictures pi ON p.picture_id = pi.pic_id 
+                        WHERE p.name LIKE %s
+                    """, ('%' + query + '%',))
+                    products = cursor.fetchall()
+                    return render_template('search_results.html', query=query, products=products)
+        except mysql.connector.Error as err:
+            return f"Database error: {err}", 500
+    else:
+        # Falls kein Suchbegriff eingegeben wurde, leere Ergebnisse anzeigen
+        return render_template('search_results.html', query=query, products=[])
     
 
 @app.route('/products')
@@ -196,178 +364,6 @@ def product_detail(product_id):
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
 
-
-
-
-@app.route('/profile/<int:user_id>', methods = ['POST', 'GET'])
-def user_profile(user_id):
-    """Zeigt das Profil eines Benutzers an."""
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
-                user = cursor.fetchone()
-
-                if user is None:
-                    return "User not found", 404
-                
-                cursor.execute("SELECT * FROM Sellers WHERE seller_id = %s", (user_id,))
-                seller = cursor.fetchone()
-            
-                if  request.method == 'POST' and 'is_seller' in request.form and not seller:
-                    shopname = request.form.get('shopname')
-                    cursor.execute(
-                        "INSERT INTO Sellers (seller_id, shopname) VALUES (%s, %s)",
-                        (user_id, shopname)
-                    )
-                    conn.commit()
-                    flash('You have been registered as a seller!', 'success')
-                    return redirect(url_for('user_profile', user_id = user_id))
-                
-            conn.commit()
-        session['user_id'] = user_id 
-        return render_template('user_profile.html', user=user, seller = seller)
-    
-    except mysql.connector.Error as err:
-        return f"Database error: {err}", 500
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    """Behandelt die Anmeldung der Benutzer."""
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-
-        try:
-            with get_db_connection() as conn:
-                with conn.cursor(dictionary=True) as cursor:
-                    cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
-                    user = cursor.fetchone()
-
-                    if user and check_password_hash(user['password'], password):
-                        session['user_id'] = user['user_id']
-                        return redirect(url_for('index'))
-                    else:
-                        return "Invalid username or password", 401
-        except mysql.connector.Error as err:
-            return f"Database error: {err}", 500
-
-    return render_template('login.html')
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    """Behandelt die Registrierung neuer Benutzer."""
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        email = request.form.get('email')
-        hashed_password = generate_password_hash(password)
-        is_seller = 'is_seller' in request.form #Prüft, ob Kästchen für Verkäufer angeklickt ist
-
-        try:
-            with get_db_connection() as conn:
-                with conn.cursor() as cursor:
-                    today = str(date.today())
-                    cursor.execute(
-                        "INSERT INTO users (username, password, acc_creation_date, email) VALUES (%s, %s, %s, %s)",
-                        (username, hashed_password, today, email)
-                    )
-                    conn.commit()
-                    user_id = cursor.lastrowid  # Holen der ID des neu erstellten Benutzers
-
-                    if is_seller:
-                        shopname = request.form.get('shopname')
-                        website_url = request.form.get('website_url')
-                        cursor.execute(
-                            "INSERT INTO Sellers (seller_id, shopname, website_url) VALUES (%s, %s, %s)",
-                            (user_id, shopname, website_url)
-                        )
-                        conn.commit()
-                    session['user_id'] = user_id  # Setzt die Session-ID für den Benutzer
-                    return redirect(url_for('login'))
-        except mysql.connector.Error as err:
-            return f"Database error: {err}", 500
-
-    return render_template('register.html')
-
-@app.route('/cart')
-def cart():
-    cart_items = session.get('cart', [])
-    return render_template('cart.html', cart_items=cart_items)
-
-
-@app.route('/add_to_cart/<int:product_id>', methods=['POST'])
-def add_to_cart(product_id):
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                cursor.execute("SELECT * FROM products WHERE product_id = %s", (product_id,))
-                product = cursor.fetchone()
-                
-                if product:
-                    # Check if the cart is in the session
-                    if 'cart' not in session:
-                        session['cart'] = []
-
-                    # Add the product to the cart
-                    session['cart'].append(product)
-                    session.modified = True
-
-                return redirect(url_for('cart'))  # Redirect to the cart page
-            
-    except mysql.connector.Error as err:
-        return f"Database error: {err}", 500
-    
-@app.route('/remove_from_cart/<int:product_id>', methods=['POST'])
-def remove_from_cart(product_id):
-    cart = session.get('cart', [])
-    for index, item in enumerate(cart):
-        if item['product_id'] == product_id:
-            del cart[index]
-            break 
-
-    session['cart'] = cart
-    session.modified = True
-    return redirect(url_for('cart'))
-
-
-
-@app.route('/checkout', methods=['GET', 'POST'])
-def checkout():
-    """Handles the checkout process."""
-    if 'cart' not in session or not session['cart']:
-        flash('Your cart is empty!', 'warning')
-        return redirect(url_for('cart'))
-
-    cart_items = session.get('cart', [])
-    total_cost = sum(float(item['cost']) for item in cart_items)
-
-    if request.method == 'POST':
-        address = request.form.get('address')
-        payment_method = request.form.get('payment_method')
-
-        # Here, you would typically handle payment processing and store the order details
-        # For simplicity, let's assume the order is successfully placed
-
-        # Reset the cart
-        session.pop('cart', None)
-        session.modified = True
-
-        # Send order confirmation
-        flash('Your order has been placed successfully!', 'success')
-        return redirect(url_for('index'))
-
-    return render_template('checkout.html', cart_items=cart_items, total_cost=total_cost)
-
-
-
-@app.route('/logout')
-def logout():
-    """Behandelt das Logout der Benutzer und leitet zur Startseite weiter."""
-    session.pop('user_id', None)
-    return redirect(url_for('index'))
-
-
 @app.route('/add_product/<int:user_id>', methods=['POST'])
 def add_product(user_id):
     name = request.form.get('name')
@@ -434,31 +430,84 @@ def add_product(user_id):
         conn.close()
 
 
-@app.route('/search')
-def search():
-    query = request.args.get('query', '').strip()
-    if query:
-        try:
-            with get_db_connection() as conn:
-                with conn.cursor(dictionary=True) as cursor:
-                    # Suche nach Produkten, die den Suchbegriff im Namen enthalten
-                    cursor.execute("""
-                        SELECT * FROM products p 
-                        JOIN pictures pi ON p.picture_id = pi.pic_id 
-                        WHERE p.name LIKE %s
-                    """, ('%' + query + '%',))
-                    products = cursor.fetchall()
-                    return render_template('search_results.html', query=query, products=products)
-        except mysql.connector.Error as err:
-            return f"Database error: {err}", 500
-    else:
-        # Falls kein Suchbegriff eingegeben wurde, leere Ergebnisse anzeigen
-        return render_template('search_results.html', query=query, products=[])
+@app.route('/cart')
+def cart():
+    cart_items = session.get('cart', [])
+    return render_template('cart.html', cart_items=cart_items)
+
+
+@app.route('/add_to_cart/<int:product_id>', methods=['POST'])
+def add_to_cart(product_id):
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("SELECT * FROM products WHERE product_id = %s", (product_id,))
+                product = cursor.fetchone()
+                
+                if product:
+                    # Überprüfen, ob der Benutzer der Verkäufer des Produkts ist
+                    if product['seller_id'] == session.get('user_id'):
+                        flash('You cannot add your own product to the cart!', 'warning')
+                        return redirect(url_for('product_detail', product_id=product_id))
+
+                    # Check if the cart is in the session
+                    if 'cart' not in session:
+                        session['cart'] = []
+
+                    # Add the product to the cart
+                    session['cart'].append(product)
+                    session.modified = True
+
+                return redirect(url_for('cart'))  # Redirect to the cart page
+            
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+
+    
+@app.route('/remove_from_cart/<int:product_id>', methods=['POST'])
+def remove_from_cart(product_id):
+    cart = session.get('cart', [])
+    for index, item in enumerate(cart):
+        if item['product_id'] == product_id:
+            del cart[index]
+            break 
+
+    session['cart'] = cart
+    session.modified = True
+    return redirect(url_for('cart'))
+
+
+
+@app.route('/checkout', methods=['GET', 'POST'])
+def checkout():
+    """Handles the checkout process."""
+    if 'cart' not in session or not session['cart']:
+        flash('Your cart is empty!', 'warning')
+        return redirect(url_for('cart'))
+
+    cart_items = session.get('cart', [])
+    total_cost = sum(float(item['cost']) for item in cart_items)
+
+    if request.method == 'POST':
+        address = request.form.get('address')
+        payment_method = request.form.get('payment_method')
+
+        # Here, you would typically handle payment processing and store the order details
+        # For simplicity, let's assume the order is successfully placed
+
+        # Reset the cart
+        session.pop('cart', None)
+        session.modified = True
+
+        # Send order confirmation
+        flash('Your order has been placed successfully!', 'success')
+        return redirect(url_for('index'))
+
+    return render_template('checkout.html', cart_items=cart_items, total_cost=total_cost)
 
 
 @app.route('/add_review/<int:product_id>', methods=['POST'])
 def add_review(product_id):
-    """Ermöglicht es angemeldeten Benutzern, eine Bewertung für ein Produkt hinzuzufügen."""
     if 'user_id' not in session:
         return redirect(url_for('login'))  # Leitet nicht angemeldete Benutzer zur Login-Seite weiter
     
@@ -468,7 +517,17 @@ def add_review(product_id):
     
     try:
         with get_db_connection() as conn:
-            with conn.cursor() as cursor:
+            with conn.cursor(dictionary=True) as cursor:
+                # Überprüfen, ob der Benutzer der Verkäufer des Produkts ist
+                cursor.execute("""
+                    SELECT seller_id FROM products WHERE product_id = %s
+                """, (product_id,))
+                product = cursor.fetchone()
+                
+                if product and product['seller_id'] == user_id:
+                    flash('You cannot review your own product!', 'warning')
+                    return redirect(url_for('product_detail', product_id=product_id))
+                
                 cursor.execute("""
                     INSERT INTO Reviews (rating, product_id, reviewer, comment)
                     VALUES (%s, %s, %s, %s)
@@ -477,6 +536,7 @@ def add_review(product_id):
                 return redirect(url_for('product_detail', product_id=product_id))
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
+
     
 @app.route('/delete_review/<int:review_id>', methods=['POST'])
 def delete_review(review_id):
@@ -507,54 +567,6 @@ def delete_review(review_id):
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
 
-@app.route('/update_user/<int:user_id>', methods = ['POST', 'GET'])
-def update_profile(user_id):
-    #neue Daten abrufen
-    new_username = request.form.get('username')
-    new_email = request.form.get('email')
-
-    try: 
-        with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                cursor.execute("SELECT username, email FROM Users WHERE user_id = %s", (user_id,))
-                user = cursor.fetchone()
-                
-                                # Überprüfen, ob neue Daten angegeben wurden
-                if not new_username and not new_email:
-                    flash("Please enter a new username or email to update.", 'warning')
-                    return redirect(url_for('user_profile', user_id=user_id))
-                
-                if user is None:
-                    flash ("user not found", 'error')
-                    return redirect(url_for('user_profile', user_id = user_id))
-                
-                if new_username == user['username']:
-                    flash ("the given username is already the current username. Please change it!", 'error')
-                    return redirect(url_for('user_profile', user_id = user_id))
-                
-                if new_email == user['email']:
-                    flash ("the given email is already the current email. Please change it!", 'error')
-                    return redirect(url_for('user_profile', user_id = user_id))
-                
-                if new_username and new_username != user['username']:
-                    cursor.execute("""UPDATE Users
-                                   SET username = %s
-                                   WHERE user_id = %s
-                                   """, (new_username, user_id))
-                    
-                if new_email and new_email != user['email']:
-                    cursor.execute("""UPDATE Users
-                                   SET email = %s
-                                   WHERE user_id = %s
-                                   """,(new_email, user_id))
-                
-                conn.commit()
-                flash('Your profile has been updated successfully', 'success')
-
-                return redirect(url_for('user_profile', user_id = user_id))
-            
-    except mysql.connector.Error as err:
-        flash(f"Database error: {err}", 'error')
 
 @app.route('/add_to_wishlist/<int:product_id>', methods=['POST'])
 def add_to_wishlist(product_id):
@@ -565,7 +577,17 @@ def add_to_wishlist(product_id):
     
     try:
         with get_db_connection() as conn:
-            with conn.cursor() as cursor:
+            with conn.cursor(dictionary=True) as cursor:
+                # Überprüfen, ob der Benutzer der Verkäufer des Produkts ist
+                cursor.execute("""
+                    SELECT seller_id FROM products WHERE product_id = %s
+                """, (product_id,))
+                product = cursor.fetchone()
+                
+                if product and product['seller_id'] == user_id:
+                    flash('You cannot add your own product to your wishlist!', 'warning')
+                    return redirect(url_for('product_detail', product_id=product_id))
+                
                 # Überprüfen, ob das Produkt bereits in der Wishlist ist
                 cursor.execute("SELECT * FROM Wishlist WHERE user_id = %s AND product_id = %s", (user_id, product_id))
                 existing_wishlist_item = cursor.fetchone()
@@ -580,6 +602,7 @@ def add_to_wishlist(product_id):
                 return redirect(url_for('product_detail', product_id=product_id))
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
+
 
 
 @app.route('/wishlist')
