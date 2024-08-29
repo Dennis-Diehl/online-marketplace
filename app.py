@@ -546,6 +546,11 @@ def add_to_cart(product_id):
                     session['cart'].append(product)
                     session.modified = True
 
+                    cursor.execute("""
+                        INSERT INTO ShoppingCarts (user_id, prod_id)
+                        VALUES (%s, %s)
+                    """, (session.get('user_id'), product_id,))
+                    conn.commit()
 
                     # Update the available copies in the database
                     cursor.execute("""

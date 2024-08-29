@@ -40,12 +40,6 @@ CREATE TABLE Sellers (
     FOREIGN KEY (seller_id) REFERENCES Users(user_id)
 );
 
-CREATE TABLE ShoppingCarts (
-    cart_id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES Users(user_id)
-);
 
 CREATE TABLE Pictures (
     pic_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -72,6 +66,14 @@ CREATE TABLE Products (
     FOREIGN KEY (picture_id) REFERENCES Pictures(pic_id),
     FOREIGN KEY (category_id) REFERENCES Category(c_id),
     FOREIGN KEY (seller_id) REFERENCES Sellers(seller_id)
+);
+
+CREATE TABLE ShoppingCarts (
+    cart_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT,
+    prod_id INT,
+    FOREIGN KEY (prod_id) REFERENCES Products(product_id),
+    FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
 
 CREATE TABLE Wishlist (
