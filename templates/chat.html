@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Chat with {{ chat.seller_name }}</h1>
+
+<div class="messages">
+    {% for message in chat.messages %}
+    <div class="message {{ 'sent' if message.sender == 'user' else 'received' }}">
+        <p>{{ message.content }}</p>
+        <small>{{ message.timestamp }}</small>
+    </div>
+    {% endfor %}
+</div>
+
+<form action="{{ url_for('send_message', seller_id=chat.seller_id) }}" method="POST">
+    <textarea name="content" placeholder="Type your message here..."></textarea>
+    <button type="submit">Send</button>
+</form>
+
+{% endblock %}

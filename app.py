@@ -1,7 +1,7 @@
 from flask import Flask, flash, render_template, request, redirect, url_for, session
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import date
+from datetime import date, datetime
 
 app = Flask(__name__)
 app.secret_key = '135798642.A'  # Stelle sicher, dass dies gesetzt ist
@@ -622,6 +622,163 @@ def remove_from_wishlist(product_id):
                 return redirect(url_for('product_detail', product_id = product_id))
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
+
+@app.route('/messages')
+def messages():
+    """Zeigt eine Liste der Verkäufer an, mit denen der Benutzer Nachrichten ausgetauscht hat."""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))  # Leitet nicht angemeldete Benutzer zur Login-Seite weiter
+
+    user_id = session['user_id']
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                # Verkäufer abrufen, mit denen der Benutzer kommuniziert hat
+                cursor.execute("""
+                    SELECT DISTINCT 
+                        u.user_id AS seller_id, 
+                        u.username AS seller_name
+                    FROM 
+                        Messaging m
+                    JOIN 
+                        Users u ON u.user_id = m.sender_id OR u.user_id = m.receiver_id
+                    WHERE 
+                        (m.sender_id = %s OR m.receiver_id = %s) AND u.user_id != %s
+                """, (user_id, user_id, user_id))
+                sellers = cursor.fetchall()
+
+        return render_template('messages_overview.html', sellers=sellers)
+
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+
+
+@app.route('/messages/<int:seller_id>')
+def view_chat(seller_id):
+    """Zeigt den Chatverlauf mit einem bestimmten Verkäufer an."""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))  # Leitet nicht angemeldete Benutzer zur Login-Seite weiter
+
+    user_id = session['user_id']
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                # Alle Nachrichten zwischen dem Benutzer und dem Verkäufer abrufen
+                cursor.execute("""
+                    SELECT 
+                        m.m_id,
+                        m.sending_date,
+                        m.message,
+                        m.sender_id,
+                        u.username AS seller_name
+                    FROM 
+                        Messaging m
+                    JOIN 
+                        Users u ON m.sender_id = u.user_id
+                    WHERE 
+                        (m.sender_id = %s AND m.receiver_id = %s) OR
+                        (m.sender_id = %s AND m.receiver_id = %s)
+                    ORDER BY 
+                        m.sending_date ASC
+                """, (user_id, seller_id, seller_id, user_id))
+                messages = cursor.fetchall()
+
+                # Nachrichten formatieren
+                chat = {
+                    'seller_id': seller_id,
+                    'seller_name': messages[0]['seller_name'] if messages else 'Unknown',
+                    'messages': [
+                        {
+                            'content': message['message'],
+                            'timestamp': message['sending_date'],
+                            'sender': 'user' if message['sender_id'] == user_id else 'seller'
+                        }
+                        for message in messages
+                    ]
+                }
+
+                return render_template('chat.html', chat=chat)
+
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+
+
+@app.route('/messages/send/<int:seller_id>', methods=['POST'])
+def send_message(seller_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))  # Leitet nicht angemeldete Benutzer zur Login-Seite weiter
+
+    content = request.form.get('content')
+    user_id = session['user_id']
+
+    if content:
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute("""
+                        INSERT INTO Messaging (message, sender_id, receiver_id)
+                        VALUES (%s, %s, %s)
+                    """, (content, user_id, seller_id))
+                    conn.commit()
+            flash('Message sent successfully!', 'success')
+        except Exception as e:
+            flash(f"Error: {str(e)}", 'danger')
+    else:
+        flash('Message content cannot be empty!', 'danger')
+
+    return redirect(url_for('view_chat', seller_id=seller_id))
+
+@app.route('/messages/start_chat', methods=['POST'])
+def start_chat():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    receiver_name = request.form.get('receiver_name')
+    sender_id = session['user_id']
+
+    if receiver_name:
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor(dictionary=True) as cursor:
+                    # Benutzer-ID basierend auf dem Benutzernamen abrufen
+                    cursor.execute("SELECT user_id FROM Users WHERE username = %s", (receiver_name,))
+                    receiver = cursor.fetchone()
+
+                    if not receiver:
+                        flash('User not found.', 'danger')
+                        return redirect(url_for('messages_overview'))
+
+                    receiver_id = receiver['user_id']
+
+                    # Prüfen, ob bereits ein Chat existiert
+                    cursor.execute("""
+                        SELECT * FROM Messaging
+                        WHERE (sender_id = %s AND receiver_id = %s)
+                        OR (sender_id = %s AND receiver_id = %s)
+                    """, (sender_id, receiver_id, receiver_id, sender_id))
+                    chat_exists = cursor.fetchone()
+
+                    if chat_exists:
+                        flash('Chat already exists!', 'warning')
+                    else:
+                        # Neuen Chat beginnen, indem eine erste Nachricht gesendet wird
+                        cursor.execute("""
+                            INSERT INTO Messaging (message, sender_id, receiver_id)
+                            VALUES (%s, %s, %s)
+                        """, ('', sender_id, receiver_id))
+                        conn.commit()
+                        flash('New chat started successfully!', 'success')
+
+            return redirect(url_for('messages'))
+
+        except Exception as e:
+            flash(f"Error: {str(e)}", 'danger')
+    else:
+        flash('Please enter a valid username.', 'danger')
+
+    return redirect(url_for('messages_'))
 
 
 if __name__ == "__main__":
