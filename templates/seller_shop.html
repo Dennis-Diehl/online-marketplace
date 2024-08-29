@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Shop from Seller{% endblock %}
+
+{% block content %}
+    <h1>Shop Name: {{ seller.shopname }}</h1>
+    <h3>Review: {{ seller.rating }} / 5</h3>
+    {% if seller.website_url %}
+        <p>Website: <a href="{{ seller.website_url }}">{{ seller.website_url }}</a></p>
+    {% endif %}
+
+    <h2>Article:</h2>
+    {% if products %}
+        <ul>
+        {% for product in products %}
+            <li>
+                <h3>{{ product.name }}</h3>
+                <p>Cost: {{ product.cost }} €</p>
+                <p>{{ product.description }}</p>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No Articles found.</p>
+    {% endif %}
+{% endblock %}

@@ -62,6 +62,32 @@ def index():
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
 
+@app.route('/Seller_shop')
+def seller_shop():
+    seller_id = request.args.get('seller_id')  # Erwartet seller_id als Parameter in der URL
+    if not seller_id:
+        return "Seller ID is required", 400
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    # Abfrage der Verkäuferinformationen
+    cursor.execute("SELECT * FROM Sellers WHERE seller_id = %s", (seller_id,))
+    seller = cursor.fetchone()
+
+    if not seller:
+        return "Seller not found", 404
+
+    # Abfrage der Artikel des Verkäufers
+    cursor.execute("SELECT * FROM Products WHERE seller_id = %s", (seller_id,))
+    products = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    # Übergabe der Daten an das Template
+    return render_template('seller_shop.html', seller=seller, products=products)
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
