@@ -322,6 +322,41 @@ def product_list():
                 return render_template('product_list.html', products=products, categories=categories, sort_by=sort_by, category_id=category_id)
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
+    
+@app.route('/subscribe/<int:seller_id>/<int:product_id>', methods=['POST'])
+def subscribe_to_seller(seller_id, product_id):
+    """Erlaubt es einem Benutzer, sich bei einem Verkäufer anzumelden."""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user_id = session['user_id']
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                # Überprüfen, ob bereits eine Subscription existiert
+                cursor.execute("""
+                    SELECT * FROM Subscriptions
+                    WHERE user_id = %s AND seller_id = %s
+                """, (user_id, seller_id))
+                existing_subscription = cursor.fetchone()
+
+                if existing_subscription:
+                    flash('You are already subscribed to this seller!', 'info')
+                else:
+                    # Neue Subscription hinzufügen
+                    cursor.execute("""
+                        INSERT INTO Subscriptions (user_id, seller_id)
+                        VALUES (%s, %s)
+                    """, (user_id, seller_id))
+                    conn.commit()
+                    flash('Successfully subscribed to the seller!', 'success')
+                    
+    except Exception as e:
+        flash(f"Error: {str(e)}", 'danger')
+
+    return redirect(url_for('product_detail', product_id=product_id))
+
 
 
 @app.route('/product/<int:product_id>')
@@ -421,6 +456,23 @@ def add_product(user_id):
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (name, cost, available_copies, category_id, information, picture_id, user_id))
         conn.commit()
+
+        # Benachrichtigung an alle Abonnenten senden
+        cursor.execute("""
+            SELECT user_id FROM Subscriptions
+            WHERE seller_id = %s
+        """, (user_id,))
+        subscribers = cursor.fetchall()
+    
+
+        for subscriber in subscribers:
+            cursor.execute("""
+                INSERT INTO Messaging (message, sender_id, receiver_id)
+                VALUES (%s, %s, %s)
+            """, (f"New product '{name}' added by seller {seller['shopname']}. Check it out!", user_id, subscriber['user_id']))
+            conn.commit()
+
+        flash('Product added and subscribers notified!', 'success')
         
         return redirect(url_for('user_profile', user_id=user_id))
     except mysql.connector.Error as err:
