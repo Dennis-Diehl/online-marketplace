@@ -579,6 +579,10 @@ def remove_from_cart(product_id):
     try:
         with get_db_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
+                cursor.execute("""
+                    DELETE FROM ShoppingCarts WHERE prod_id = %s
+                """, (product_id,))
+                conn.commit()
                 # Update the available copies in the database
                 cursor.execute("""
                     UPDATE products
