@@ -7,6 +7,7 @@
         <!-- Produktdetails anzeigen -->
         <h1>{{ product.name }}</h1>
         <img src="{{ product.source }}" alt="{{ product.name }}">
+        <p>available copies: {{product.available_copies}}</p>
         <p>${{ product.cost }}</p>
         <p>{{ product.information }}</p>
 
