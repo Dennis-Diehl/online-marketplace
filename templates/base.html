@@ -21,10 +21,11 @@
         <nav>
             <div class="left-nav">
                 <a href="{{ url_for('product_list') }}">Home</a>
+                {% if session.get('user_id') %}
                 <a href="{{ url_for('cart') }}">Cart</a>
+                <a href="{{ url_for('wishlist') }}">Wishlist</a>
                 <a href="{{ url_for('checkout') }}">Checkout</a>
-                <a href="{{ url_for('messages') }}">Messages</a> <!-- Hier der Link für Messaging -->
-
+                {% endif %}
             </div>
             <div class="search-bar-container">
                 <form action="{{ url_for('search') }}" method="GET">
@@ -34,7 +35,7 @@
             </div>
             <div class="right-nav">
                 {% if session.get('user_id') %}
-                    <a href="{{ url_for('wishlist') }}">Wishlist</a>
+                    <a href="{{ url_for('messages') }}">Messages</a> <!-- Hier der Link für Messaging -->
                     <a href="{{ url_for('user_profile', user_id=session['user_id']) }}">Profile</a>
                     <a href="{{ url_for('logout') }}">Logout</a>
                 {% else %}
