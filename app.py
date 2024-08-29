@@ -62,6 +62,32 @@ def index():
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
 
+@app.route('/Seller_shop')
+def seller_shop():
+    seller_id = request.args.get('seller_id')  # Erwartet seller_id als Parameter in der URL
+    if not seller_id:
+        return "Seller ID is required", 400
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    # Abfrage der Verkäuferinformationen
+    cursor.execute("SELECT * FROM Sellers WHERE seller_id = %s", (seller_id,))
+    seller = cursor.fetchone()
+
+    if not seller:
+        return "Seller not found", 404
+
+    # Abfrage der Artikel des Verkäufers
+    cursor.execute("SELECT * FROM Products WHERE seller_id = %s", (seller_id,))
+    products = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    # Übergabe der Daten an das Template
+    return render_template('seller_shop.html', seller=seller, products=products)
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -221,7 +247,7 @@ def search():
                     cursor.execute("""
                         SELECT * FROM products p 
                         JOIN pictures pi ON p.picture_id = pi.pic_id 
-                        WHERE p.name LIKE %s
+                        WHERE p.name LIKE %s AND p.available_copies > 0
                     """, ('%' + query + '%',))
                     products = cursor.fetchall()
                     return render_template('search_results.html', query=query, products=products)
@@ -304,7 +330,7 @@ def product_list():
                         SELECT p.*, pi.source 
                         FROM products p 
                         JOIN pictures pi ON p.picture_id = pi.pic_id 
-                        WHERE p.category_id IN (%s)
+                        WHERE p.category_id IN (%s) AND p.available_copies > 0
                         ORDER BY %s
                     """ % (','.join(['%s'] * len(subcategory_ids)), order_by)
                     cursor.execute(query, tuple(subcategory_ids))
@@ -314,6 +340,7 @@ def product_list():
                         SELECT p.*, pi.source 
                         FROM products p 
                         JOIN pictures pi ON p.picture_id = pi.pic_id 
+                        WHERE p.available_copies > 0
                         ORDER BY %s
                     """ % order_by)
                 
@@ -495,8 +522,17 @@ def add_to_cart(product_id):
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute("SELECT * FROM products WHERE product_id = %s", (product_id,))
                 product = cursor.fetchone()
+
+                if not product:
+                    flash('Product not found!', 'error')
+                    return redirect(url_for('index'))
+                
                 
                 if product:
+                # Überprüfen, ob genug Kopien verfügbar sind
+                    if product['available_copies'] <= 0:
+                        flash('Product is out of stock!', 'warning')
+                        return redirect(url_for('product_detail', product_id=product_id))
                     # Überprüfen, ob der Benutzer der Verkäufer des Produkts ist
                     if product['seller_id'] == session.get('user_id'):
                         flash('You cannot add your own product to the cart!', 'warning')
@@ -509,6 +545,15 @@ def add_to_cart(product_id):
                     # Add the product to the cart
                     session['cart'].append(product)
                     session.modified = True
+
+
+                    # Update the available copies in the database
+                    cursor.execute("""
+                        UPDATE products
+                        SET available_copies = available_copies - 1
+                        WHERE product_id = %s
+                    """, (product_id,))
+                    conn.commit()
 
                 return redirect(url_for('cart'))  # Redirect to the cart page
             
@@ -526,8 +571,22 @@ def remove_from_cart(product_id):
 
     session['cart'] = cart
     session.modified = True
-    return redirect(url_for('cart'))
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                # Update the available copies in the database
+                cursor.execute("""
+                    UPDATE products
+                    SET available_copies = available_copies + 1
+                    WHERE product_id = %s
+                """, (product_id,))
+                conn.commit()
 
+                flash('Product removed from cart.', 'success')
+                return redirect(url_for('cart'))
+            
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
 
 
 @app.route('/checkout', methods=['GET', 'POST'])
