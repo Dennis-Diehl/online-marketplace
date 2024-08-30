@@ -7,8 +7,8 @@
         <!-- Produktdetails anzeigen -->
         <h1>{{ product.name }}</h1>
         <img src="{{ product.source }}" alt="{{ product.name }}">
-        <p>available copies: {{product.available_copies}}</p>
-        <p>${{ product.cost }}</p>
+        <p>Available copies: {{ product.available_copies }}</p>
+        <p>Cost: €{{ product.cost }}</p>
         <p>{{ product.information }}</p>
 
         <!-- Add to Cart Button -->
@@ -17,24 +17,19 @@
             <button type="submit">Add to Cart</button>
         </form>
         {% else %}
-            <p><a href="{{ url_for('login') }}">Log in</a> to add the item to the cart.</p>
+            <p><a href="{{ url_for('login') }}">Please log in</a>, to add a product to the cart.</p>
         {% endif %}
 
         <!-- Check if the product is already in the wishlist -->
         {% if product_in_wishlist %}
             <form method="post" action="{{ url_for('remove_from_wishlist', product_id=product.product_id) }}">
-                <button type="submit">Remove from Wishlist</button>
+                <button type="submit">Remove from wishlist</button>
             </form>
         {% else %}
             <form method="post" action="{{ url_for('add_to_wishlist', product_id=product.product_id) }}">
-                <button type="submit">Add to Wishlist</button>
+                <button type="submit">Add to wishlist</button>
             </form>
         {% endif %}
-
-        <!-- Add a subscribe button -->
-        <form action="{{ url_for('subscribe_to_seller', seller_id=product.seller_id, product_id=product.product_id) }}" method="POST">
-            <button type="submit">Subscribe to Seller</button>
-        </form>
 
         <!-- Bewertungen anzeigen -->
         <h2>Reviews</h2>
@@ -42,9 +37,9 @@
             <ul>
                 {% for review in reviews %}
                     <li>
-                        <strong>{{ review.username }}</strong> - {{ review.rating }} stars
+                        <strong>{{ review.username }}</strong> - {{ review.rating }} Sterne
                         <p>{{ review.comment }}</p>
-                        <small>Reviewed on {{ review.r_date }}</small>
+                        <small>Review from {{ review.r_date }}</small>
 
                         <!-- Formular zum Löschen der Bewertung -->
                         {% if review.reviewer == user_id %}
@@ -57,7 +52,7 @@
                 {% endfor %}
             </ul>
         {% else %}
-            <p>No reviews yet.</p>
+            <p>No Review.</p>
         {% endif %}
 
         <!-- Formular zur Bewertung hinzufügen -->
@@ -68,17 +63,20 @@
                 <input type="number" id="rating" name="rating" min="1" max="5" required>
                 <label for="comment">Comment:</label>
                 <textarea id="comment" name="comment" rows="4" required></textarea>
-                <button type="submit">Submit Review</button>
+                <button type="submit">Send Rating</button>
             </form>
         {% else %}
-            <p><a href="{{ url_for('login') }}">Log in</a> to write a review.</p>
+            <p><a href="{{ url_for('login') }}">Please log in</a>, to write a Review.</p>
         {% endif %}
 
         <!-- Link zurück zur Produktliste -->
-        <a href="{{ url_for('product_list') }}">Back to Products</a>
+        <a href="{{ url_for('product_list') }}">Back to the Products</a>
 
+        <!-- Seller Informationen -->
         <h2>Seller</h2>
-            
-
+        <p>Shop Name: <a href="{{ url_for('seller_shop', seller_id=product.seller_id) }}">{{ product.shopname }}</a></p>
+        {% if product.website_url %}
+            <p>Website: <a href="{{ product.website_url }}">{{ product.website_url }}</a></p>
+        {% endif %}
     </div>
 {% endblock %}

@@ -82,6 +82,7 @@ def seller_shop():
     cursor.execute("SELECT * FROM Products WHERE seller_id = %s", (seller_id,))
     products = cursor.fetchall()
 
+
     cursor.close()
     connection.close()
 
@@ -393,16 +394,19 @@ def product_detail(product_id):
     try:
         with get_db_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
-                # Produktdetails abrufen
+                # Produktdetails und Verkäuferinformationen abrufen
                 cursor.execute("""
-                    SELECT p.*, s.website_url, pi.source
+                    SELECT p.*, s.seller_id, s.shopname, s.website_url, pi.source
                     FROM products p 
                     INNER JOIN Sellers s ON p.seller_id = s.seller_id 
                     INNER JOIN Pictures pi ON p.picture_id = pi.pic_id
                     WHERE p.product_id = %s
                 """, (product_id,))
                 product = cursor.fetchone()
-                
+
+                if not product:
+                    return "Product not found", 404
+
                 # Bewertungen abrufen
                 cursor.execute("""
                     SELECT r.*, u.username
@@ -425,6 +429,7 @@ def product_detail(product_id):
                 return render_template('product_detail.html', product=product, reviews=reviews, user_id=user_id, product_in_wishlist=product_in_wishlist)
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
+
 
 @app.route('/add_product/<int:user_id>', methods=['POST'])
 def add_product(user_id):
