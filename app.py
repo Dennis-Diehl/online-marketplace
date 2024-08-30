@@ -79,7 +79,7 @@ def seller_shop():
         return "Seller not found", 404
 
     # Abfrage der Artikel des Verkäufers
-    cursor.execute("SELECT * FROM Products WHERE seller_id = %s", (seller_id,))
+    cursor.execute("SELECT * FROM Products p JOIN Pictures pi ON p.picture_id = pi.pic_id  WHERE seller_id = %s", (seller_id,))
     products = cursor.fetchall()
 
 
@@ -258,7 +258,6 @@ def search():
         # Falls kein Suchbegriff eingegeben wurde, leere Ergebnisse anzeigen
         return render_template('search_results.html', query=query, products=[])
     
-
 @app.route('/products')
 def product_list():
     """Zeigt eine Liste von Produkten an und ermöglicht die Sortierung sowie Filterung nach Kategorien."""
@@ -406,6 +405,55 @@ def order():
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
 
+@app.route('/seller_orders')
+def seller_orders():
+    user_id = session.get('user_id')  # Die ID des aktuell angemeldeten Verkäufers aus der Session abrufen
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                # Produkte des Verkäufers abrufen
+                cursor.execute("""
+                    SELECT product_id, name, cost, available_copies, information
+                    FROM Products
+                    WHERE seller_id = %s
+                    ORDER BY name ASC
+                """, (user_id,))
+                products = cursor.fetchall()  # Alle Produkte des Verkäufers abrufen
+
+        return render_template('seller_orders.html', products=products)
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+
+@app.route('/update_products', methods=['POST', 'GET'])
+def update_products():
+    user_id = session.get('user_id')
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                # Alle Produkte des Verkäufers abrufen, um die Änderungen zu speichern
+                cursor.execute("SELECT product_id FROM Products WHERE seller_id = %s", (user_id,))
+                products = cursor.fetchall()
+
+                for product in products:
+                    product_id = product[0]
+                    # Neue Werte aus dem Formular abrufen
+                    new_cost = request.form.get(f'cost_{product_id}')
+                    new_copies = request.form.get(f'copies_{product_id}')
+                    new_info = request.form.get(f'info_{product_id}')
+
+                    # Update-Anweisung ausführen
+                    cursor.execute("""
+                        UPDATE Products
+                        SET cost = %s, available_copies = %s, information = %s
+                        WHERE product_id = %s AND seller_id = %s
+                    """, (new_cost, new_copies, new_info, product_id, user_id))
+
+            conn.commit()  # Änderungen speichern
+
+        return redirect(url_for('seller_orders'))
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
     """Zeigt die Detailseite eines Produkts an, einschließlich Bewertungen."""
@@ -448,7 +496,6 @@ def product_detail(product_id):
                 return render_template('product_detail.html', product=product, reviews=reviews, user_id=user_id, product_in_wishlist=product_in_wishlist)
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
-
 
 @app.route('/add_product/<int:user_id>', methods=['POST'])
 def add_product(user_id):
@@ -532,12 +579,10 @@ def add_product(user_id):
         cursor.close()
         conn.close()
 
-
 @app.route('/cart')
 def cart():
     cart_items = session.get('cart', [])
     return render_template('cart.html', cart_items=cart_items)
-
 
 @app.route('/add_to_cart/<int:product_id>', methods=['POST'])
 def add_to_cart(product_id):
@@ -589,7 +634,6 @@ def add_to_cart(product_id):
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
 
-    
 @app.route('/remove_from_cart/<int:product_id>', methods=['POST'])
 def remove_from_cart(product_id):
     cart = session.get('cart', [])
@@ -620,7 +664,6 @@ def remove_from_cart(product_id):
             
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
-
 
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
@@ -698,7 +741,7 @@ def add_review(product_id):
     except mysql.connector.Error as err:
         return f"Database error: {err}", 500
 
-    
+
 @app.route('/delete_review/<int:review_id>', methods=['POST'])
 def delete_review(review_id):
     """Ermöglicht es Benutzern, ihre eigene Bewertung zu löschen."""

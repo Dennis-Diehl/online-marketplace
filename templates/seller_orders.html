@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Your Products{% endblock %}
+
+{% block content %}
+    <h1>Manage Your Products</h1>
+
+    {% if products %}
+        <form method="post" action="{{ url_for('update_products') }}">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product ID</th>
+                        <th>Name</th>
+                        <th>Cost</th>
+                        <th>Available Copies</th>
+                        <th>Information</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td>{{ product.product_id }}</td>
+                            <td>{{ product.name }}</td>
+                            <td>
+                                <input type="number" name="cost_{{ product.product_id }}" value="{{ product.cost }}" step="0.01">
+                            </td>
+                            <td>
+                                <input type="number" name="copies_{{ product.product_id }}" value="{{ product.available_copies }}" min="0">
+                            </td>
+                            <td>
+                                <textarea name="info_{{ product.product_id }}">{{ product.information }}</textarea>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit">Save Changes</button>
+        </form>
+    {% else %}
+        <p>You have no products listed.</p>
+    {% endif %}
+{% endblock %}

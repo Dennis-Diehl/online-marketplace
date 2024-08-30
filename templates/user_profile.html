@@ -27,7 +27,7 @@
             <label for="email">New Email:</label>
             <input type="email" id="email" name="email" placeholder="enter new email">
             
-            <button type="submit">Update Profile</button>
+            <button class="btn" type="submit">Update Profile</button>
             
     
         </form>
@@ -56,13 +56,12 @@
                 <input type="text" id="picture_url" name="picture_url" required>
             
                 <p>
-                    <button type="submit">Add Product</button>
+                    <button class="btn" type="submit">Add Product</button>
                 </p>
             </p>
             </form>
         {% endif %}
-        
-        <p><a href="{{ url_for('index') }}">Back to Home</a></p>
+    
 
         <!-- Formular für das Registrieren als Verkäufer -->
         {% if not seller %}
@@ -78,9 +77,14 @@
             </form>
         {% endif %}
         
-        <h3>View your Order History</h3>
+        <h3>View your History</h3>
         <a href="{{ url_for('order') }}" class="btn">Order History</a>
+        {% if seller %}
+        <a href="{{ url_for('seller_orders') }}" class="btn">Order Status</a>
+        {% endif %}
     </div>
+
+    <p><a href="{{ url_for('index') }}" class="btn"">Back Home</a></p>
 </body>
 </html>
 
