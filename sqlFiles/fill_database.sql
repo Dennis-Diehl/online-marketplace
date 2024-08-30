@@ -26,7 +26,7 @@ INSERT INTO Category (name, description, superiorc_id) VALUES
 
 INSERT INTO Products (picture_id, cost, available_copies, category_id, seller_id, name, information) VALUES
 (1, 299.99, 10, 2, 1, 'Smartphone XYZ', 'Latest model with high performance'),
-(2, 19.99, 100, 3, 2, 'Programming 101', 'A beginner\'s guide to programming'),
+(2, 19.99, 100, 3, 2, 'Programming 101', 'A beginner\s guide to programming'),
 (3, 5.99, 50, 4, 3, 'Gourmet Olive Oil', 'High quality olive oil from Italy');
 
 INSERT INTO Reviews (rating, product_id, reviewer, comment) VALUES

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Order History{% endblock %}
+
+{% block content %}
+    <h1>Your Order History</h1>
+
+    {% if orders %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Delivery Address</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                    <tr>
+                        <td>{{ order.order_id }}</td>
+                        <td>{{ order.delivery_address }}</td>
+                        <td>{{ order.status }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>You have no orders yet.</p>
+    {% endif %}
+{% endblock %}

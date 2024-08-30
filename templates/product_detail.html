@@ -31,6 +31,11 @@
             </form>
         {% endif %}
 
+        <form action="{{ url_for('subscribe_to_seller', seller_id=product.seller_id, product_id=product.product_id) }}" method="POST">
+            <button type="submit">Subscribe to Seller</button>
+        </form>
+
+
         <!-- Bewertungen anzeigen -->
         <h2>Reviews</h2>
         {% if reviews %}

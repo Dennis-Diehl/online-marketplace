@@ -385,7 +385,26 @@ def subscribe_to_seller(seller_id, product_id):
 
     return redirect(url_for('product_detail', product_id=product_id))
 
+@app.route('/order')
+def order():
+    user_id = session.get('user_id')  # Die ID des aktuell angemeldeten Benutzers aus der Session abrufen
+    if not user_id:
+        return redirect(url_for('login'))  # Wenn der Benutzer nicht eingeloggt ist, zur Login-Seite weiterleiten
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                # Bestellungen des Benutzers abrufen
+                cursor.execute("""
+                    SELECT order_id, delivery_address, payment_id, shopping_cart_id, status
+                    FROM Orders
+                    WHERE user_id = %s
+                """, (user_id,))
+                orders = cursor.fetchall()  # Alle Bestellungen des Benutzers abrufen
 
+        return render_template('order.html', orders=orders)
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
 
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
@@ -606,30 +625,47 @@ def remove_from_cart(product_id):
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
     """Handles the checkout process."""
-    if 'cart' not in session or not session['cart']:
-        flash('Your cart is empty!', 'warning')
-        return redirect(url_for('cart'))
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                if 'cart' not in session or not session['cart']:
+                    flash('Your cart is empty!', 'warning')
+                    return redirect(url_for('cart'))
 
-    cart_items = session.get('cart', [])
-    total_cost = sum(float(item['cost']) for item in cart_items)
+                cart_items = session.get('cart', [])
+                total_cost = sum(float(item['cost']) for item in cart_items)
 
-    if request.method == 'POST':
-        address = request.form.get('address')
-        payment_method = request.form.get('payment_method')
+                if request.method == 'POST':
+                    address = request.form.get('address')
+                    payment_method = request.form.get('payment_method')
 
-        # Here, you would typically handle payment processing and store the order details
-        # For simplicity, let's assume the order is successfully placed
+                    user_id = session.get('user_id')
+                    shopping_cart_id = session.get('shopping_cart_id')
 
-        # Reset the cart
-        session.pop('cart', None)
-        session.modified = True
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT pm_id FROM PaymentMethods WHERE pm_name = %s", (payment_method,))
+                    payment_id = cursor.fetchone()
+                    
 
-        # Send order confirmation
-        flash('Your order has been placed successfully!', 'success')
-        return redirect(url_for('index'))
+                    cursor.execute("""
+                        INSERT INTO Orders (delivery_address, payment_id, shopping_cart_id, user_id, status)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (address, payment_id, shopping_cart_id, user_id, 'Processing'))
+                    
+                    conn.commit()
 
-    return render_template('checkout.html', cart_items=cart_items, total_cost=total_cost)
+                    # Reset the cart
+                    session.pop('cart', None)
+                    session.modified = True
 
+                    # Send order confirmation
+                    flash('Your order has been placed successfully!', 'success')
+                    return redirect(url_for('index'))
+
+                return render_template('checkout.html', cart_items=cart_items, total_cost=total_cost)
+            
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500    
 
 @app.route('/add_review/<int:product_id>', methods=['POST'])
 def add_review(product_id):
