@@ -835,7 +835,7 @@ def new_products():
 
         return render_template('new_products.html', products=new_products)
     
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"Database error: {err}", 500
 
     finally:
