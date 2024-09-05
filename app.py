@@ -802,6 +802,46 @@ def start_chat():
 
     return redirect(url_for('messages_'))
 
+@app.route('/new_products')
+def new_products():
+    user_id = session.get('user_id')  # Die ID des aktuell angemeldeten Benutzers abrufen
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Abonnierte Verkäufer ermitteln
+        cursor.execute("""
+            SELECT seller_id FROM Subscriptions
+            WHERE user_id = %s
+        """, (user_id,))
+        subscribed_sellers = cursor.fetchall()
+
+        if not subscribed_sellers:
+            return "You are not subscribed to any sellers.", 404
+
+        seller_ids = [seller['seller_id'] for seller in subscribed_sellers]
+
+        # Neue Produkte von den abonnierten Verkäufern abrufen, zusammen mit den Shopnamen und Bildquellen
+        cursor.execute("""
+            SELECT p.name, p.cost, p.available_copies, p.information, s.shopname, pic.source
+            FROM Products p
+            JOIN Sellers s ON p.seller_id = s.seller_id
+            JOIN Pictures pic ON p.picture_id = pic.pic_id
+            WHERE p.seller_id IN (%s)
+            ORDER BY p.product_id DESC
+        """ % ','.join(['%s'] * len(seller_ids)), tuple(seller_ids))
+        new_products = cursor.fetchall()
+
+        return render_template('new_products.html', products=new_products)
+    
+    except mysql.connector.Error as err:
+        return f"Database error: {err}", 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
 
 if __name__ == "__main__":
     app.run(debug=True)
