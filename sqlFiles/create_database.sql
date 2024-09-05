@@ -111,10 +111,14 @@ CREATE TABLE Orders (
     payment_id INT,
     shopping_cart_id INT,
     user_id INT,
+    seller_id INT,  
     status VARCHAR(255) NOT NULL,
+    total_amount DECIMAL(10, 2),  
     FOREIGN KEY (shopping_cart_id) REFERENCES ShoppingCarts(cart_id),
-    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+    FOREIGN KEY (seller_id) REFERENCES Sellers(seller_id)
 );
+
 
 CREATE TABLE PaymentMethods (
     pm_id INT PRIMARY KEY AUTO_INCREMENT,

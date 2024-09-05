@@ -21,18 +21,19 @@
                 <button class="dropdown-button">Category</button>
                 <div class="dropdown-menu">
                     <a href="{{ url_for('product_list', sort_by=sort_by) }}">All Categories</a>
-                    {% for category_id, category in categories.items() %}
-                        <div class="dropdown-item">
-                            <a href="{{ url_for('product_list', sort_by=sort_by, category_id=category_id) }}">{{ category.name }}</a>
-                            {% if category.subcategories %}
-                                <div class="subcategory-menu">
-                                    {% for subcategory in category.subcategories %}
-                                        <a href="{{ url_for('product_list', sort_by=sort_by, category_id=subcategory.id) }}">{{ subcategory.name }}</a>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
+                    {% for category in categories %}
+                    <div class="dropdown-item">
+                        <a href="{{ url_for('product_list', sort_by=sort_by, category_id=category.category_id) }}">{{ category.category_name }}</a>
+                        {% if category.subcategories %}
+                            <div class="subcategory-menu">
+                                {% for subcategory in category.subcategories %}
+                                    <a href="{{ url_for('product_list', sort_by=sort_by, category_id=subcategory.id) }}">{{ subcategory.name }}</a>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
                 </div>
             </div>
         </div>

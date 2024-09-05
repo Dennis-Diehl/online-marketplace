@@ -1,25 +1,42 @@
-from flask import Flask, flash, render_template, request, redirect, url_for, session
-import mysql.connector
-from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import date, datetime
+from flask import Flask, flash, render_template, request, redirect, url_for, session, jsonify
+from werkzeug.security import check_password_hash
+import data_access
+from data_access import get_db_connection
+
 
 app = Flask(__name__)
-app.secret_key = '135798642.A'  # Stelle sicher, dass dies gesetzt ist
+app.secret_key = '135798642.A'
 
-# Konfiguration für die Verbindung zur MariaDB
-db_config = {
-    'user': 'dennis',
-    'password': 'füller',
-    'host': 'localhost',
-    'database': 'marktplatz',
-    'raise_on_warnings': True,
-    'charset': 'utf8mb4',
-    'collation': 'utf8mb4_general_ci'
-}
+@app.route('/api/entities', methods=['GET', 'POST'])
+def entities():
+    if request.method == 'GET':
+        return jsonify(data_access.get_entities())
+    elif request.method == 'POST':
+        data = request.get_json()
+        new_entity = data_access.create_entity(data)
+        return jsonify(new_entity), 201
 
-def get_db_connection():
-    """Stellt eine Verbindung zur Datenbank her."""
-    return mysql.connector.connect(**db_config)
+@app.route('/api/entities/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+def entity(id):
+    if request.method == 'GET':
+        entity = data_access.get_entity(id)
+        if entity:
+            return jsonify(entity)
+        else:
+            return jsonify({'error': 'Entity not found'}), 404
+    elif request.method == 'PUT':
+        data = request.get_json()
+        updated_entity = data_access.update_entity(id, data)
+        if updated_entity:
+            return jsonify(updated_entity)
+        else:
+            return jsonify({'error': 'Entity not found'}), 404
+    elif request.method == 'DELETE':
+        success = data_access.delete_entity(id)
+        if success:
+            return '', 204
+        else:
+            return jsonify({'error': 'Entity not found'}), 404
 
 @app.route('/')
 def index():
@@ -29,66 +46,42 @@ def index():
 
     try:
         # Abrufen der Kategorien
-        with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                cursor.execute("""
-                    SELECT DISTINCT c1.c_id AS category_id, c1.name AS category_name, c2.c_id AS subcategory_id, c2.name AS subcategory_name
-                    FROM Category c1
-                    LEFT JOIN Category c2 ON c2.superiorc_id = c1.c_id
-                    WHERE c1.superiorc_id IS NULL
-                """)
-                results = cursor.fetchall()
+        results = data_access.get_categories()
+        products = data_access.get_products()
 
-                categories = {}
-                for row in results:
-                    cat_id = row['category_id']
-                    if cat_id not in categories:
-                        categories[cat_id] = {
-                            'name': row['category_name'],
-                            'subcategories': []
-                        }
-                    if row['subcategory_id']:
-                        categories[cat_id]['subcategories'].append({
-                            'id': row['subcategory_id'],
-                            'name': row['subcategory_name']
-                        })
-
-        # Abrufen der Produkte
-        with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                cursor.execute("SELECT * FROM products p JOIN Pictures pi ON p.picture_id = pi.pic_id")
-                products = cursor.fetchall()
-                return render_template('product_list.html', products=products, user_id=user_id, categories=categories)
-    except mysql.connector.Error as err:
+        categories = {}
+        for row in results:
+            cat_id = row['category_id']
+            if cat_id not in categories:
+                categories[cat_id] = {
+                    'name': row['category_name'],
+                    'subcategories': []
+                }
+            if row['subcategory_id']:
+                categories[cat_id]['subcategories'].append({
+                    'id': row['subcategory_id'],
+                    'name': row['subcategory_name']
+                })
+        
+        return render_template('product_list.html', products=products, user_id=user_id, categories=categories)
+    except Exception as err:
         return f"Database error: {err}", 500
 
 @app.route('/Seller_shop')
 def seller_shop():
-    seller_id = request.args.get('seller_id')  # Erwartet seller_id als Parameter in der URL
+    seller_id = request.args.get('seller_id')
     if not seller_id:
         return "Seller ID is required", 400
 
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-
-    # Abfrage der Verkäuferinformationen
-    cursor.execute("SELECT * FROM Sellers WHERE seller_id = %s", (seller_id,))
-    seller = cursor.fetchone()
-
-    if not seller:
-        return "Seller not found", 404
-
-    # Abfrage der Artikel des Verkäufers
-    cursor.execute("SELECT * FROM Products p JOIN Pictures pi ON p.picture_id = pi.pic_id  WHERE seller_id = %s", (seller_id,))
-    products = cursor.fetchall()
-
-
-    cursor.close()
-    connection.close()
-
-    # Übergabe der Daten an das Template
-    return render_template('seller_shop.html', seller=seller, products=products)
-
+    try:
+        with data_access.get_db_connection() as connection:
+            seller = data_access.get_seller_by_id(connection, seller_id)
+            if not seller:
+                return "Seller not found", 404
+            products = data_access.get_products_by_seller_id(connection, seller_id)
+        return render_template('seller_shop.html', seller=seller, products=products)
+    except Exception as e:
+        return f"Database error: {str(e)}", 500
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -98,21 +91,17 @@ def login():
         password = request.form.get('password')
 
         try:
-            with get_db_connection() as conn:
-                with conn.cursor(dictionary=True) as cursor:
-                    cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
-                    user = cursor.fetchone()
+            user = data_access.get_user_by_username(username)
 
-                    if user and check_password_hash(user['password'], password):
-                        session['user_id'] = user['user_id']
-                        return redirect(url_for('index'))
-                    else:
-                        return "Invalid username or password", 401
-        except mysql.connector.Error as err:
+            if user and check_password_hash(user['password'], password):
+                session['user_id'] = user['user_id']
+                return redirect(url_for('index'))
+            else:
+                return "Invalid username or password", 401
+        except Exception as err:
             return f"Database error: {err}", 500
 
     return render_template('login.html')
-
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -121,31 +110,27 @@ def register():
         username = request.form.get('username')
         password = request.form.get('password')
         email = request.form.get('email')
-        hashed_password = generate_password_hash(password)
         is_seller = 'is_seller' in request.form #Prüft, ob Kästchen für Verkäufer angeklickt ist
-
+     
         try:
-            with get_db_connection() as conn:
-                with conn.cursor() as cursor:
-                    today = str(date.today())
-                    cursor.execute(
-                        "INSERT INTO users (username, password, acc_creation_date, email) VALUES (%s, %s, %s, %s)",
-                        (username, hashed_password, today, email)
-                    )
-                    conn.commit()
-                    user_id = cursor.lastrowid  # Holen der ID des neu erstellten Benutzers
-
-                    if is_seller:
-                        shopname = request.form.get('shopname')
-                        website_url = request.form.get('website_url')
-                        cursor.execute(
+            shopname = request.form.get('shopname')
+            website_url = request.form.get('website_url') 
+                
+            user_id = data_access.register_user(username, password, email, is_seller, shopname, website_url)
+            if is_seller:
+                shopname = request.form.get('shopname')
+                website_url = request.form.get('website_url') 
+                conn = get_db_connection()
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute(
                             "INSERT INTO Sellers (seller_id, shopname, website_url) VALUES (%s, %s, %s)",
                             (user_id, shopname, website_url)
                         )
-                        conn.commit()
-                    session['user_id'] = user_id  # Setzt die Session-ID für den Benutzer
-                    return redirect(url_for('login'))
-        except mysql.connector.Error as err:
+                conn.commit()
+                
+            session['user_id'] = user_id
+            return redirect(url_for('login'))
+        except Exception as err:
             return f"Database error: {err}", 500
 
     return render_template('register.html')
@@ -156,108 +141,55 @@ def logout():
     session.pop('user_id', None)
     return redirect(url_for('index'))
 
-@app.route('/profile/<int:user_id>', methods = ['POST', 'GET'])
+
+@app.route('/profile/<int:user_id>', methods=['POST', 'GET'])
 def user_profile(user_id):
-    """Zeigt das Profil eines Benutzers an."""
     try:
         with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
-                user = cursor.fetchone()
+            user = data_access.get_user_by_id(user_id)
+            if not user:
+                return "User not found", 404
 
-                if user is None:
-                    return "User not found", 404
-                
-                cursor.execute("SELECT * FROM Sellers WHERE seller_id = %s", (user_id,))
-                seller = cursor.fetchone()
-            
-                if  request.method == 'POST' and 'is_seller' in request.form and not seller:
-                    shopname = request.form.get('shopname')
-                    cursor.execute(
-                        "INSERT INTO Sellers (seller_id, shopname) VALUES (%s, %s)",
-                        (user_id, shopname)
-                    )
-                    conn.commit()
-                    flash('You have been registered as a seller!', 'success')
-                    return redirect(url_for('user_profile', user_id = user_id))
-                
-            conn.commit()
+            seller = data_access.get_seller_by_id(user_id)
+
+            if request.method == 'POST' and 'is_seller' in request.form and not seller:
+                shopname = request.form.get('shopname')
+                data_access.insert_seller(user_id, shopname)
+                flash('You have been registered as a seller!', 'success')
+                return redirect(url_for('user_profile', user_id=user_id))
+        
         session['user_id'] = user_id 
-        return render_template('user_profile.html', user=user, seller = seller)
+        return render_template('user_profile.html', user=user, seller=seller)
+    except Exception as e:
+        return f"Database error: {str(e)}", 500
     
-    except mysql.connector.Error as err:
-        return f"Database error: {err}", 500
-
-@app.route('/update_user/<int:user_id>', methods = ['POST', 'GET'])
+    
+@app.route('/update_user/<int:user_id>', methods=['POST', 'GET'])
 def update_profile(user_id):
-    #neue Daten abrufen
     new_username = request.form.get('username')
     new_email = request.form.get('email')
 
-    try: 
-        with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                cursor.execute("SELECT username, email FROM Users WHERE user_id = %s", (user_id,))
-                user = cursor.fetchone()
-                
-                                # Überprüfen, ob neue Daten angegeben wurden
-                if not new_username and not new_email:
-                    flash("Please enter a new username or email to update.", 'warning')
-                    return redirect(url_for('user_profile', user_id=user_id))
-                
-                if user is None:
-                    flash ("user not found", 'error')
-                    return redirect(url_for('user_profile', user_id = user_id))
-                
-                if new_username == user['username']:
-                    flash ("the given username is already the current username. Please change it!", 'error')
-                    return redirect(url_for('user_profile', user_id = user_id))
-                
-                if new_email == user['email']:
-                    flash ("the given email is already the current email. Please change it!", 'error')
-                    return redirect(url_for('user_profile', user_id = user_id))
-                
-                if new_username and new_username != user['username']:
-                    cursor.execute("""UPDATE Users
-                                   SET username = %s
-                                   WHERE user_id = %s
-                                   """, (new_username, user_id))
-                    
-                if new_email and new_email != user['email']:
-                    cursor.execute("""UPDATE Users
-                                   SET email = %s
-                                   WHERE user_id = %s
-                                   """,(new_email, user_id))
-                
-                conn.commit()
-                flash('Your profile has been updated successfully', 'success')
-
-                return redirect(url_for('user_profile', user_id = user_id))
-            
-    except mysql.connector.Error as err:
-        flash(f"Database error: {err}", 'error')
+    try:
+        data_access.update_user_profile(user_id, new_username, new_email)
+        flash('Your profile has been updated successfully', 'success')
+        return redirect(url_for('user_profile', user_id=user_id))
+    except Exception as e:
+        flash(f"Database error: {str(e)}", 'error')
+        return redirect(url_for('user_profile', user_id=user_id))
 
 @app.route('/search')
 def search():
     query = request.args.get('query', '').strip()
     if query:
         try:
-            with get_db_connection() as conn:
-                with conn.cursor(dictionary=True) as cursor:
-                    # Suche nach Produkten, die den Suchbegriff im Namen enthalten
-                    cursor.execute("""
-                        SELECT * FROM products p 
-                        JOIN pictures pi ON p.picture_id = pi.pic_id 
-                        WHERE p.name LIKE %s AND p.available_copies > 0
-                    """, ('%' + query + '%',))
-                    products = cursor.fetchall()
-                    return render_template('search_results.html', query=query, products=products)
-        except mysql.connector.Error as err:
-            return f"Database error: {err}", 500
+            with get_db_connection() as connection:
+                products = data_access.search_products(connection, query)
+                return render_template('search_results.html', query=query, products=products)
+        except Exception as e:
+            return f"Database error: {str(e)}", 500
     else:
-        # Falls kein Suchbegriff eingegeben wurde, leere Ergebnisse anzeigen
         return render_template('search_results.html', query=query, products=[])
-    
+      
 @app.route('/products')
 def product_list():
     """Zeigt eine Liste von Produkten an und ermöglicht die Sortierung sowie Filterung nach Kategorien."""
@@ -274,81 +206,51 @@ def product_list():
     order_by = sort_options.get(sort_by, 'p.name ASC')  # Standard-Sortierung
 
     try:
-        with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                # Kategorien für das Dropdown-Menü abrufen
-                cursor.execute("""
-                    SELECT c1.c_id AS category_id, c1.name AS category_name, c2.c_id AS subcategory_id, c2.name AS subcategory_name
-                    FROM Category c1
-                    LEFT JOIN Category c2 ON c2.superiorc_id = c1.c_id
-                    WHERE c1.superiorc_id IS NULL
-                """)
-                results = cursor.fetchall()
-                
-                categories = {}
-                for row in results:
-                    cat_id = row['category_id']
-                    if cat_id not in categories:
-                        categories[cat_id] = {
-                            'name': row['category_name'],
-                            'subcategories': []
-                        }
-                    if row['subcategory_id']:
-                        categories[cat_id]['subcategories'].append({
-                            'id': row['subcategory_id'],
-                            'name': row['subcategory_name']
-                        })
+        # Kategorien abrufen
+        categories = data_access.get_categories()
 
-                # Alle Unterkategorien der ausgewählten Kategorie finden
-                if category_id:
-                    # Erstellen einer Liste für die IDs der Kategorien
-                    subcategory_ids = [category_id]
+        if category_id:
+            # Alle Unterkategorien der ausgewählten Kategorie finden
+            subcategory_ids = [category_id]
+            subcategories = data_access.get_subcategories(category_id)
 
-                    # Schritt 1: Alle direkten Unterkategorien der ausgewählten Kategorie finden
-                    cursor.execute("""
-                        SELECT c_id
-                        FROM Category
-                        WHERE superiorc_id = %s
-                    """, (category_id,))
-                    subcategories = cursor.fetchall()
-                    
-                    # IDs der Unterkategorien sammeln
-                    while subcategories:
-                        new_subcategories = []
-                        for sub in subcategories:
-                            subcategory_ids.append(sub['c_id'])
-                            cursor.execute("""
-                                SELECT c_id
-                                FROM Category
-                                WHERE superiorc_id = %s
-                            """, (sub['c_id'],))
-                            new_subcategories.extend(cursor.fetchall())
-                        subcategories = new_subcategories
-                    
-                    # Produkte aus den Kategorien und Unterkategorien abrufen
-                    query = """
-                        SELECT p.*, pi.source 
-                        FROM products p 
-                        JOIN pictures pi ON p.picture_id = pi.pic_id 
-                        WHERE p.category_id IN (%s) AND p.available_copies > 0
-                        ORDER BY %s
-                    """ % (','.join(['%s'] * len(subcategory_ids)), order_by)
-                    cursor.execute(query, tuple(subcategory_ids))
-                else:
-                    # Keine Kategorie ausgewählt, alle Produkte abrufen
-                    cursor.execute("""
-                        SELECT p.*, pi.source 
-                        FROM products p 
-                        JOIN pictures pi ON p.picture_id = pi.pic_id 
-                        WHERE p.available_copies > 0
-                        ORDER BY %s
-                    """ % order_by)
-                
-                products = cursor.fetchall()
+            # IDs der Unterkategorien sammeln
+            while subcategories:
+                new_subcategories = []
+                for sub in subcategories:
+                    subcategory_ids.append(sub['c_id'])
+                    new_subcategories.extend(data_access.get_subcategories(sub['c_id']))
+                subcategories = new_subcategories
 
-                return render_template('product_list.html', products=products, categories=categories, sort_by=sort_by, category_id=category_id)
-    except mysql.connector.Error as err:
+            # Produkte aus den Kategorien und Unterkategorien abrufen
+            products = data_access.get_products_by_category(subcategory_ids, order_by)
+        else:
+            products = data_access.get_all_products(order_by)
+
+        return render_template('product_list.html', products=products, categories=categories, sort_by=sort_by, category_id=category_id)
+    except Exception as err:
         return f"Database error: {err}", 500
+
+@app.route('/buyer_statistics/<int:user_id>', methods=['GET'])
+def buyer_statistics(user_id):
+    try:
+        with get_db_connection() as conn:
+            # Abrufen der Benutzerinformationen des Verkäufers
+            user = data_access.get_user_by_id(user_id)
+            if not user:
+                return "User not found", 404
+
+            # Käuferstatistiken abrufen
+            statistics = data_access.get_buyer_statistics(user_id)
+            if not statistics:
+                return "No statistics found", 404
+
+            # Rendern der Käuferstatistik-Vorlage mit den Benutzer- und Statistikdaten
+            return render_template('buyer_statistics.html', user=user, statistics=statistics)
+
+    except Exception as e:
+        return f"Database error: {str(e)}", 500
+
     
 @app.route('/subscribe/<int:seller_id>/<int:product_id>', methods=['POST'])
 def subscribe_to_seller(seller_id, product_id):
@@ -359,26 +261,10 @@ def subscribe_to_seller(seller_id, product_id):
     user_id = session['user_id']
 
     try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cursor:
-                # Überprüfen, ob bereits eine Subscription existiert
-                cursor.execute("""
-                    SELECT * FROM Subscriptions
-                    WHERE user_id = %s AND seller_id = %s
-                """, (user_id, seller_id))
-                existing_subscription = cursor.fetchone()
-
-                if existing_subscription:
-                    flash('You are already subscribed to this seller!', 'info')
-                else:
-                    # Neue Subscription hinzufügen
-                    cursor.execute("""
-                        INSERT INTO Subscriptions (user_id, seller_id)
-                        VALUES (%s, %s)
-                    """, (user_id, seller_id))
-                    conn.commit()
-                    flash('Successfully subscribed to the seller!', 'success')
-                    
+        if data_access.get_subscribe_to_seller(user_id, seller_id):
+            flash('Successfully subscribed to the seller!', 'success')
+        else:
+            flash('You are already subscribed to this seller!', 'info')
     except Exception as e:
         flash(f"Error: {str(e)}", 'danger')
 
@@ -391,67 +277,37 @@ def order():
         return redirect(url_for('login'))  # Wenn der Benutzer nicht eingeloggt ist, zur Login-Seite weiterleiten
     
     try:
-        with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                # Bestellungen des Benutzers abrufen
-                cursor.execute("""
-                    SELECT order_id, delivery_address, payment_id, shopping_cart_id, status
-                    FROM Orders
-                    WHERE user_id = %s
-                """, (user_id,))
-                orders = cursor.fetchall()  # Alle Bestellungen des Benutzers abrufen
-
+        orders = data_access.get_orders_by_user_id(user_id)  # Bestellungen des Benutzers abrufen
         return render_template('order.html', orders=orders)
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"Database error: {err}", 500
 
 @app.route('/seller_orders')
 def seller_orders():
     user_id = session.get('user_id')  # Die ID des aktuell angemeldeten Verkäufers aus der Session abrufen
     try:
-        with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                # Produkte des Verkäufers abrufen
-                cursor.execute("""
-                    SELECT product_id, name, cost, available_copies, information
-                    FROM Products
-                    WHERE seller_id = %s
-                    ORDER BY name ASC
-                """, (user_id,))
-                products = cursor.fetchall()  # Alle Produkte des Verkäufers abrufen
-
+        products = data_access.get_products_by_seller_id(user_id)  # Produkte des Verkäufers abrufen
         return render_template('seller_orders.html', products=products)
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"Database error: {err}", 500
 
 @app.route('/update_products', methods=['POST', 'GET'])
 def update_products():
     user_id = session.get('user_id')
     try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cursor:
-                # Alle Produkte des Verkäufers abrufen, um die Änderungen zu speichern
-                cursor.execute("SELECT product_id FROM Products WHERE seller_id = %s", (user_id,))
-                products = cursor.fetchall()
+        products = data_access.get_products_by_seller_id_for_update(user_id)  # Alle Produkte des Verkäufers abrufen
+        for product in products:
+            product_id = product[0]
+            # Neue Werte aus dem Formular abrufen
+            new_cost = request.form.get(f'cost_{product_id}')
+            new_copies = request.form.get(f'copies_{product_id}')
+            new_info = request.form.get(f'info_{product_id}')
 
-                for product in products:
-                    product_id = product[0]
-                    # Neue Werte aus dem Formular abrufen
-                    new_cost = request.form.get(f'cost_{product_id}')
-                    new_copies = request.form.get(f'copies_{product_id}')
-                    new_info = request.form.get(f'info_{product_id}')
-
-                    # Update-Anweisung ausführen
-                    cursor.execute("""
-                        UPDATE Products
-                        SET cost = %s, available_copies = %s, information = %s
-                        WHERE product_id = %s AND seller_id = %s
-                    """, (new_cost, new_copies, new_info, product_id, user_id))
-
-            conn.commit()  # Änderungen speichern
+            # Update-Anweisung ausführen
+            data_access.update_product(product_id, user_id, new_cost, new_copies, new_info)
 
         return redirect(url_for('seller_orders'))
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"Database error: {err}", 500
 
 @app.route('/product/<int:product_id>')
@@ -459,43 +315,21 @@ def product_detail(product_id):
     """Zeigt die Detailseite eines Produkts an, einschließlich Bewertungen."""
     user_id = session.get('user_id')
     try:
-        with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                # Produktdetails und Verkäuferinformationen abrufen
-                cursor.execute("""
-                    SELECT p.*, s.seller_id, s.shopname, s.website_url, pi.source
-                    FROM products p 
-                    INNER JOIN Sellers s ON p.seller_id = s.seller_id 
-                    INNER JOIN Pictures pi ON p.picture_id = pi.pic_id
-                    WHERE p.product_id = %s
-                """, (product_id,))
-                product = cursor.fetchone()
+        product = data_access.get_product_details(product_id)  # Produktdetails abrufen
 
-                if not product:
-                    return "Product not found", 404
+        if not product:
+            return "Product not found", 404
 
-                # Bewertungen abrufen
-                cursor.execute("""
-                    SELECT r.*, u.username
-                    FROM Reviews r
-                    INNER JOIN Users u ON r.reviewer = u.user_id
-                    WHERE r.product_id = %s
-                    ORDER BY r.r_date DESC
-                """, (product_id,))
-                reviews = cursor.fetchall()
+        reviews = data_access.get_product_reviews(product_id)  # Bewertungen abrufen
 
-                product_in_wishlist = False
-                if user_id:
-                    # Überprüfen, ob das Produkt in der Wunschliste des Benutzers ist
-                    cursor.execute("""
-                        SELECT * FROM Wishlist
-                        WHERE user_id = %s AND product_id = %s
-                    """, (user_id, product_id))
-                    product_in_wishlist = cursor.fetchone() is not None
+        product_in_wishlist = False
+        if user_id:
+            product_in_wishlist = data_access.is_product_in_wishlist(user_id, product_id)  # Wunschlistenstatus überprüfen
 
-                return render_template('product_detail.html', product=product, reviews=reviews, user_id=user_id, product_in_wishlist=product_in_wishlist)
-    except mysql.connector.Error as err:
+        return render_template('product_detail.html', product=product, reviews=reviews, user_id=user_id, product_in_wishlist=product_in_wishlist)
+    except Exception as err:
         return f"Database error: {err}", 500
+
 
 @app.route('/add_product/<int:user_id>', methods=['POST'])
 def add_product(user_id):
@@ -573,7 +407,7 @@ def add_product(user_id):
         flash('Product added and subscribers notified!', 'success')
         
         return redirect(url_for('user_profile', user_id=user_id))
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"Database error: {err}", 500
     finally:
         cursor.close()
@@ -631,7 +465,7 @@ def add_to_cart(product_id):
 
                 return redirect(url_for('cart'))  # Redirect to the cart page
             
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"Database error: {err}", 500
 
 @app.route('/remove_from_cart/<int:product_id>', methods=['POST'])
@@ -662,7 +496,7 @@ def remove_from_cart(product_id):
                 flash('Product removed from cart.', 'success')
                 return redirect(url_for('cart'))
             
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"Database error: {err}", 500
 
 @app.route('/checkout', methods=['GET', 'POST'])
@@ -689,11 +523,13 @@ def checkout():
                     cursor.execute("SELECT pm_id FROM PaymentMethods WHERE pm_name = %s", (payment_method,))
                     payment_id = cursor.fetchone()
                     
+                    for item in cart_items:
+                        seller_id = item['seller_id']
 
                     cursor.execute("""
-                        INSERT INTO Orders (delivery_address, payment_id, shopping_cart_id, user_id, status)
-                        VALUES (%s, %s, %s, %s, %s)
-                    """, (address, payment_id, shopping_cart_id, user_id, 'Processing'))
+                        INSERT INTO Orders (delivery_address, payment_id, shopping_cart_id, user_id, status, seller_id, total_amount)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """, (address, payment_id, shopping_cart_id, user_id, 'Processing', seller_id, total_cost))
                     
                     conn.commit()
 
@@ -707,7 +543,7 @@ def checkout():
 
                 return render_template('checkout.html', cart_items=cart_items, total_cost=total_cost)
             
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"Database error: {err}", 500    
 
 @app.route('/add_review/<int:product_id>', methods=['POST'])
@@ -738,7 +574,7 @@ def add_review(product_id):
                 """, (rating, product_id, user_id, comment))
                 conn.commit()
                 return redirect(url_for('product_detail', product_id=product_id))
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"Database error: {err}", 500
 
 
@@ -768,7 +604,7 @@ def delete_review(review_id):
             # Redirect zur Detailseite des Produkts
             product_id = request.form.get('product_id')
             return redirect(url_for('product_detail', product_id=product_id))
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"Database error: {err}", 500
 
 
@@ -804,9 +640,8 @@ def add_to_wishlist(product_id):
                     flash('Product is already in your wishlist!', 'info')
                 
                 return redirect(url_for('product_detail', product_id=product_id))
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"Database error: {err}", 500
-
 
 
 @app.route('/wishlist')
@@ -817,20 +652,12 @@ def wishlist():
     user_id = session['user_id']
     
     try:
-        with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                cursor.execute("""
-                    SELECT p.*, pi.source 
-                    FROM Wishlist w
-                    JOIN products p ON w.product_id = p.product_id
-                    JOIN pictures pi ON p.picture_id = pi.pic_id
-                    WHERE w.user_id = %s
-                """, (user_id,))
-                wishlist_items = cursor.fetchall()
-                
-                return render_template('wishlist.html', wishlist_items=wishlist_items)
-    except mysql.connector.Error as err:
+        wishlist_items = data_access.get_wishlist(user_id)  # Wunschliste abrufen
+        
+        return render_template('wishlist.html', wishlist_items=wishlist_items)
+    except Exception as err:
         return f"Database error: {err}", 500
+
 
 
 @app.route('/remove_from_wishlist/<int:product_id>', methods=['POST'])
@@ -847,8 +674,9 @@ def remove_from_wishlist(product_id):
                 conn.commit()
                 flash('Product removed from your wishlist.', 'success')
                 return redirect(url_for('product_detail', product_id = product_id))
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"Database error: {err}", 500
+
 
 @app.route('/messages')
 def messages():
@@ -859,26 +687,13 @@ def messages():
     user_id = session['user_id']
 
     try:
-        with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                # Verkäufer abrufen, mit denen der Benutzer kommuniziert hat
-                cursor.execute("""
-                    SELECT DISTINCT 
-                        u.user_id AS seller_id, 
-                        u.username AS seller_name
-                    FROM 
-                        Messaging m
-                    JOIN 
-                        Users u ON u.user_id = m.sender_id OR u.user_id = m.receiver_id
-                    WHERE 
-                        (m.sender_id = %s OR m.receiver_id = %s) AND u.user_id != %s
-                """, (user_id, user_id, user_id))
-                sellers = cursor.fetchall()
+        sellers = data_access.get_sellers_with_messages(user_id)  # Verkäufer abrufen
 
         return render_template('messages_overview.html', sellers=sellers)
 
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"Database error: {err}", 500
+
 
 
 @app.route('/messages/<int:seller_id>')
@@ -890,45 +705,25 @@ def view_chat(seller_id):
     user_id = session['user_id']
 
     try:
-        with get_db_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                # Alle Nachrichten zwischen dem Benutzer und dem Verkäufer abrufen
-                cursor.execute("""
-                    SELECT 
-                        m.m_id,
-                        m.sending_date,
-                        m.message,
-                        m.sender_id,
-                        u.username AS seller_name
-                    FROM 
-                        Messaging m
-                    JOIN 
-                        Users u ON m.sender_id = u.user_id
-                    WHERE 
-                        (m.sender_id = %s AND m.receiver_id = %s) OR
-                        (m.sender_id = %s AND m.receiver_id = %s)
-                    ORDER BY 
-                        m.sending_date ASC
-                """, (user_id, seller_id, seller_id, user_id))
-                messages = cursor.fetchall()
+        messages = data_access.get_chat_messages(user_id, seller_id)  # Alle Nachrichten abrufen
 
-                # Nachrichten formatieren
-                chat = {
-                    'seller_id': seller_id,
-                    'seller_name': messages[0]['seller_name'] if messages else 'Unknown',
-                    'messages': [
-                        {
-                            'content': message['message'],
-                            'timestamp': message['sending_date'],
-                            'sender': 'user' if message['sender_id'] == user_id else 'seller'
-                        }
-                        for message in messages
-                    ]
+        # Nachrichten formatieren
+        chat = {
+            'seller_id': seller_id,
+            'seller_name': messages[0]['seller_name'] if messages else 'Unknown',
+            'messages': [
+                {
+                    'content': message['message'],
+                    'timestamp': message['sending_date'],
+                    'sender': 'user' if message['sender_id'] == user_id else 'seller'
                 }
+                for message in messages
+            ]
+        }
 
-                return render_template('chat.html', chat=chat)
+        return render_template('chat.html', chat=chat)
 
-    except mysql.connector.Error as err:
+    except Exception as err:
         return f"Database error: {err}", 500
 
 
@@ -1010,4 +805,3 @@ def start_chat():
 
 if __name__ == "__main__":
     app.run(debug=True)
-

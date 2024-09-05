@@ -60,6 +60,9 @@
                 </p>
             </p>
             </form>
+            <h3>View Buyer Statistics</h3>
+            <a href="{{ url_for('buyer_statistics', user_id=user.user_id) }}" class="btn">View Buyer Statistics</a>
+        
         {% endif %}
     
 
@@ -80,11 +83,11 @@
         <h3>View your History</h3>
         <a href="{{ url_for('order') }}" class="btn">Order History</a>
         {% if seller %}
-        <a href="{{ url_for('seller_orders') }}" class="btn">Order Status</a>
+            <a href="{{ url_for('seller_orders') }}" class="btn">Order Status</a>
         {% endif %}
     </div>
 
-    <p><a href="{{ url_for('index') }}" class="btn"">Back Home</a></p>
+    <p><a href="{{ url_for('index') }}" class="btn">Back Home</a></p>
 </body>
 </html>
 
