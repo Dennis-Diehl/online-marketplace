@@ -75,10 +75,10 @@ def seller_shop():
 
     try:
         with data_access.get_db_connection() as connection:
-            seller = data_access.get_seller_by_id(connection, seller_id)
+            seller = data_access.get_seller_by_id(seller_id)
             if not seller:
                 return "Seller not found", 404
-            products = data_access.get_products_by_seller_id(connection, seller_id)
+            products = data_access.get_products_by_seller_id(seller_id)
         return render_template('seller_shop.html', seller=seller, products=products)
     except Exception as e:
         return f"Database error: {str(e)}", 500
@@ -245,13 +245,30 @@ def buyer_statistics(user_id):
             if not statistics:
                 return "No statistics found", 404
 
-            # Rendern der Käuferstatistik-Vorlage mit den Benutzer- und Statistikdaten
-            return render_template('buyer_statistics.html', user=user, statistics=statistics)
+            # Rendern der Vorlage mit den Statistikdaten
+            return render_template('buyer_statistics.html', user=user, buyer_statistics=statistics)
+    except Exception as e:
+        return f"Database error: {str(e)}", 500
+    
+@app.route('/product_statistics/<int:user_id>', methods=['GET'])
+def product_statistics(user_id):
+    try:
+        with get_db_connection() as conn:
+            # Abrufen der Benutzerinformationen des Verkäufers
+            user = data_access.get_user_by_id(user_id)
+            if not user:
+                return "User not found", 404
 
+            # statistiken abrufen
+            product_statistics = data_access.get_product_statistics(user_id)
+            if not product_statistics:
+                return "No statistics found", 404
+
+            # Rendern der Vorlage mit den Statistikdaten
+            return render_template('product_statistics.html', user=user, statistics=product_statistics)
     except Exception as e:
         return f"Database error: {str(e)}", 500
 
-    
 @app.route('/subscribe/<int:seller_id>/<int:product_id>', methods=['POST'])
 def subscribe_to_seller(seller_id, product_id):
     """Erlaubt es einem Benutzer, sich bei einem Verkäufer anzumelden."""

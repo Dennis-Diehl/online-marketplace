@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Product Statistics{% endblock %}
+
+{% block content %}
+    <div>
+        <h1>Product Statistics for {{ user.username }}</h1>
+
+        {% if statistics %}
+            <h2>Product Statistics</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Total Sold</th>
+                        <th>Total Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in statistics %}
+                        <tr>
+                            <td>{{ stat.product_name }}</td>
+                            <td>{{ stat.total_sold }}</td>
+                            <td>${{ stat.total_revenue }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <h2>Product Sales Chart</h2>
+            <canvas id="productChart" width="600" height="400"></canvas>
+
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const ctx = document.getElementById('productChart').getContext('2d');
+
+                    // Jinja2-Daten in JSON konvertieren und ins JavaScript-Format umwandeln
+                    const productStatistics = {{ statistics | tojson | safe }};
+
+                    // Daten vorbereiten
+                    const labels = productStatistics.map(stat => stat.product_name);
+                    const data = productStatistics.map(stat => stat.total_sold);
+
+                    // Diagramm konfigurieren
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Total Sold',
+                                data: data,
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                });
+            </script>
+        {% else %}
+            <p>No product statistics available.</p>
+        {% endif %}
+
+        <p><a href="{{ url_for('user_profile', user_id=user.user_id) }}" class="btn">Back to Profile</a></p>
+    </div>
+{% endblock %}

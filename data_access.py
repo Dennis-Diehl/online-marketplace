@@ -231,7 +231,22 @@ def get_buyer_statistics(seller_id):
         cursor = conn.cursor(dictionary=True)
         cursor.execute(query, (seller_id,))
         return cursor.fetchall()
-
+    
+def get_product_statistics(seller_id):
+    query = """
+    SELECT p.name AS product_name,
+           sci.quantity AS total_sold,
+           SUM(sci.quantity * p.cost) AS total_revenue
+    FROM ShoppingCartItems sci
+    JOIN Products p ON sci.product_id = p.product_id
+    JOIN Orders o ON o.shopping_cart_id = sci.cart_id
+    WHERE p.seller_id = %s
+    GROUP BY p.name;
+    """
+    with get_db_connection() as conn:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(query, (seller_id,))
+        return cursor.fetchall()
 
 
 def get_subscribe_to_seller(user_id, seller_id):

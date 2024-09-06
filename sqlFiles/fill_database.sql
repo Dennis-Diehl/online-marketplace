@@ -30,14 +30,14 @@ INSERT INTO Products (picture_id, cost, available_copies, category_id, seller_id
 (3, 5.99, 50, 4, 3, 'Gourmet Olive Oil', 'High quality olive oil from Italy');
 
 INSERT INTO Reviews (rating, product_id, reviewer, comment) VALUES
-(5, 1, 1, 'Excellent smartphone, highly recommend!'),
-(4, 2, 2, 'Great book for beginners, but a bit basic.'),
-(5, 3, 3, 'Best olive oil I have ever tasted!');
+(5, 1, 2, 'Excellent smartphone, highly recommend!'),
+(4, 2, 3, 'Great book for beginners, but a bit basic.'),
+(5, 3, 1, 'Best olive oil I have ever tasted!');
 
 INSERT INTO ShoppingCartItems (position, cart_id, product_id, quantity) VALUES
-(1, 1, 1, 1),
-(2, 2, 2, 3),
-(1, 3, 3, 2);
+(1, 1, 2, 1),
+(2, 2, 3, 3),
+(1, 3, 1, 2);
 
 INSERT INTO Orders (delivery_address, shopping_cart_id, user_id, status) VALUES
 ('123 Elm Street', 1, 1, 'Shipped'),
