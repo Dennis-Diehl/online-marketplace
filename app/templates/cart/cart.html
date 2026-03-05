@@ -9,7 +9,7 @@
         <ul class="list-group mb-3">
             {% for item in cart_items %}
                 <li id="cart-item-{{ item.product_id }}" class="list-group-item d-flex justify-content-between align-items-center">
-                    <span>{{ item.name }} <span class="text-primary fw-semibold">${{ item.cost }}</span></span>
+                    <span>{{ item.name }} <span class="text-primary fw-semibold">{{ item.cost }} €</span></span>
                     <button class="btn btn-sm btn-outline-danger"
                             onclick="removeFromCart({{ item.product_id }}, this)">Remove</button>
                 </li>

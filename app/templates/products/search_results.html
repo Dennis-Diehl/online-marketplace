@@ -14,7 +14,7 @@
                             <h6 class="card-title">
                                 <a href="{{ url_for('products.product_detail', product_id=product['product_id']) }}" class="text-decoration-none text-dark">{{ product['name'] }}</a>
                             </h6>
-                            <p class="card-text fw-bold text-primary mb-0">${{ product['cost'] }}</p>
+                            <p class="card-text fw-bold text-primary mb-0">{{ product['cost'] }} €</p>
                         </div>
                     </div>
                 </div>

@@ -13,12 +13,12 @@
                     {% for item in cart_items %}
                         <li class="list-group-item d-flex justify-content-between">
                             <span>{{ item.name }}</span>
-                            <span>${{ item.cost }}</span>
+                            <span>{{ item.cost }} €</span>
                         </li>
                     {% endfor %}
                     <li class="list-group-item d-flex justify-content-between fw-bold fs-5 text-primary">
                         <span>Total</span>
-                        <span>${{ total_cost }}</span>
+                        <span>{{ total_cost }} €</span>
                     </li>
                 </ul>
             </div>

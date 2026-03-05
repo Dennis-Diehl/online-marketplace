@@ -12,7 +12,7 @@
                     <img src="{{ item.source }}" alt="{{ item.name }}" class="wishlist-img rounded">
                     <div class="flex-grow-1">
                         <p class="fw-semibold mb-0">{{ item.name }}</p>
-                        <p class="text-primary mb-0">${{ item.cost }}</p>
+                        <p class="text-primary mb-0">{{ item.cost }} €</p>
                         <small class="text-muted">{{ item.information }}</small>
                     </div>
                     <form method="post" action="{{ url_for('wishlist.remove_from_wishlist', product_id=item.product_id) }}">
