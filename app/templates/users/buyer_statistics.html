@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Buyer Statistics{% endblock %}
+
+{% block content %}
+    <h1 class="page-title mb-4">Buyer Statistics for {{ user.username }}</h1>
+
+    {% if buyer_statistics %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="thead-primary">
+                    <tr>
+                        <th>Buyer</th>
+                        <th>Number of Orders</th>
+                        <th>Total Amount Spent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in buyer_statistics %}
+                        <tr>
+                            <td>{{ stat.buyer_username }}</td>
+                            <td>{{ stat.num_orders }}</td>
+                            <td>${{ stat.total_amount }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">No statistics available.</div>
+    {% endif %}
+
+    <a href="{{ url_for('users.user_profile', user_id=user.user_id) }}" class="btn btn-outline-secondary mt-3">Back to Profile</a>
+{% endblock %}

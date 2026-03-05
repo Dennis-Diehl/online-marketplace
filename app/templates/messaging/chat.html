@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Chat{% endblock %}
+
+{% block content %}
+    <h1 class="h4 mb-3">Chat with {{ chat.seller_name }}</h1>
+
+    <div class="card">
+        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+            <div class="d-flex flex-column gap-2">
+                {% for message in chat.messages %}
+                    <div class="message {{ 'sent' if message.sender == 'user' else 'received' }}">
+                        <div class="bubble">{{ message.content }}</div>
+                        <small class="text-muted">{{ message.timestamp }}</small>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="card-footer">
+            <form action="{{ url_for('messaging.send_message', seller_id=chat.seller_id) }}" method="POST" class="d-flex gap-2">
+                <textarea class="form-control" name="content" rows="2" placeholder="Type your message..."></textarea>
+                <button class="btn btn-primary align-self-end">Send</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

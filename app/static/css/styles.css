@@ -1,0 +1,139 @@
+:root {
+  --bs-primary: #1d4ed8;
+  --bs-primary-rgb: 29, 78, 216;
+  --bs-body-bg: #f8fafc;
+  --bs-body-color: #1e293b;
+  --bs-link-color: #1d4ed8;
+  --bs-link-hover-color: #1e3a8a;
+}
+
+.navbar {
+  background-color: #1e3a8a !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.navbar .nav-link,
+.navbar .navbar-brand,
+.navbar .btn-outline-light {
+  color: #fff !important;
+}
+
+.navbar .nav-link:hover {
+  color: #bfdbfe !important;
+}
+
+.btn-primary {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.btn-primary:hover {
+  background-color: #1e40af;
+  border-color: #1e3a8a;
+}
+
+.btn-outline-primary {
+  color: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.btn-outline-primary:hover {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 0.2rem rgba(29, 78, 216, 0.2);
+}
+
+.card {
+  transition: box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 4px 16px rgba(29, 78, 216, 0.12) !important;
+}
+
+.page-title {
+  border-left: 4px solid #1d4ed8;
+  padding-left: 0.75rem;
+}
+
+.price-tag {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.product-card-img {
+  height: 180px;
+  object-fit: contain;
+  padding: 0.75rem;
+  width: 100%;
+  background: #f8fafc;
+}
+
+.product-detail-img {
+  max-height: 300px;
+  object-fit: contain;
+  width: 100%;
+}
+
+.wishlist-img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+.thead-primary {
+  background-color: #1d4ed8;
+  color: #fff;
+}
+
+.thead-primary th {
+  background-color: #1d4ed8;
+  color: #fff;
+}
+
+.message.sent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.message.received {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.message.sent .bubble {
+  background-color: #1d4ed8;
+  color: #fff;
+  border-radius: 1rem 1rem 0.25rem 1rem;
+  padding: 0.5rem 0.875rem;
+  max-width: 75%;
+}
+
+.message.received .bubble {
+  background-color: #e2e8f0;
+  color: #1e293b;
+  border-radius: 1rem 1rem 1rem 0.25rem;
+  padding: 0.5rem 0.875rem;
+  max-width: 75%;
+}
+
+footer {
+  background-color: #1e3a8a;
+  color: #fff;
+}
+
+@media (min-width: 992px) {
+  .navbar-search {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Order History{% endblock %}
+
+{% block content %}
+    <h1 class="page-title mb-4">Your Order History</h1>
+
+    {% if orders %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="thead-primary">
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Delivery Address</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        <tr>
+                            <td>{{ order.order_id }}</td>
+                            <td>{{ order.delivery_address }}</td>
+                            {% set status_class = {'pending': 'warning', 'shipped': 'info', 'delivered': 'success', 'cancelled': 'danger'}.get(order.status|lower, 'secondary') %}
+                            <td><span class="badge bg-{{ status_class }} text-dark">{{ order.status }}</span></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">You have no orders yet.</div>
+    {% endif %}
+{% endblock %}

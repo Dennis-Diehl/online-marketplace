@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Product Statistics{% endblock %}
+
+{% block content %}
+    <h1 class="page-title mb-4">Product Statistics for {{ user.username }}</h1>
+
+    {% if statistics %}
+        <div class="table-responsive mb-4">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="thead-primary">
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Total Sold</th>
+                        <th>Total Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in statistics %}
+                        <tr>
+                            <td>{{ stat.product_name }}</td>
+                            <td>{{ stat.total_sold }}</td>
+                            <td>${{ stat.total_revenue }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Product Sales Chart</h2>
+                <canvas id="productChart" width="600" height="400"></canvas>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const ctx = document.getElementById('productChart').getContext('2d');
+                const productStatistics = {{ statistics | tojson | safe }};
+                const labels = productStatistics.map(stat => stat.product_name);
+                const data = productStatistics.map(stat => stat.total_sold);
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Total Sold',
+                            data: data,
+                            backgroundColor: 'rgba(29,78,216,0.2)',
+                            borderColor: 'rgba(29,78,216,1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            });
+        </script>
+    {% else %}
+        <div class="alert alert-info">No product statistics available.</div>
+    {% endif %}
+
+    <a href="{{ url_for('users.user_profile', user_id=user.user_id) }}" class="btn btn-outline-secondary">Back to Profile</a>
+{% endblock %}

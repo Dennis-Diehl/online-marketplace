@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Cart{% endblock %}
+
+{% block content %}
+    <h1 class="page-title mb-4">Your Cart</h1>
+
+    {% if cart_items %}
+        <ul class="list-group mb-3">
+            {% for item in cart_items %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>{{ item.name }} <span class="text-primary fw-semibold">${{ item.cost }}</span></span>
+                    <form method="post" action="{{ url_for('cart.remove_from_cart', product_id=item.product_id) }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('cart.checkout') }}" class="btn btn-primary">Checkout</a>
+            <a href="{{ url_for('products.product_list') }}" class="btn btn-outline-secondary">Continue Shopping</a>
+        </div>
+    {% else %}
+        <div class="alert alert-info">Your cart is empty. <a href="{{ url_for('products.product_list') }}">Browse products</a></div>
+    {% endif %}
+{% endblock %}

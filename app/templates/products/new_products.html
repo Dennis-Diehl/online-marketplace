@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}New Products{% endblock %}
+
+{% block content %}
+    <h1 class="page-title mb-4">New Products from Subscribed Sellers</h1>
+
+    {% if products %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="thead-primary">
+                    <tr>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Cost</th>
+                        <th>Available Copies</th>
+                        <th>Information</th>
+                        <th>Seller</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td><img src="{{ product.source }}" alt="Product Image" width="80" class="rounded"></td>
+                            <td>{{ product.name }}</td>
+                            <td>${{ product.cost }}</td>
+                            <td>{{ product.available_copies }}</td>
+                            <td>{{ product.information }}</td>
+                            <td>{{ product.shopname }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">No new products from your subscribed sellers.</div>
+    {% endif %}
+{% endblock %}

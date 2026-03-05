@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+    <h1 class="page-title mb-4">Your Chats</h1>
+
+    <div class="row g-4">
+        <div class="col-md-7">
+            <div class="card shadow-sm">
+                <div class="card-header fw-semibold">Conversations</div>
+                <ul class="list-group list-group-flush">
+                    {% for seller in sellers %}
+                        <li class="list-group-item">
+                            <a href="{{ url_for('messaging.view_chat', seller_id=seller.seller_id) }}" class="text-decoration-none">
+                                Chat with {{ seller.seller_name }}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="list-group-item text-muted">No conversations yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h6 fw-semibold mb-3">Start a new chat</h2>
+                    <form action="{{ url_for('messaging.start_chat') }}" method="POST">
+                        <div class="mb-3">
+                            <label for="receiver_name" class="form-label">Username</label>
+                            <input type="text" class="form-control" name="receiver_name" id="receiver_name" placeholder="Enter username" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Start Chat</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

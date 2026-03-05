@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Shop from Seller{% endblock %}
+
+{% block content %}
+    <div class="d-flex align-items-center gap-3 mb-3">
+        <h1 class="page-title mb-0">{{ seller.shopname }}</h1>
+        <span class="badge bg-warning text-dark fs-6">{{ seller.rating }} / 5</span>
+    </div>
+    {% if seller.website_url %}
+        <p><a href="{{ seller.website_url }}">{{ seller.website_url }}</a></p>
+    {% endif %}
+
+    <h2 class="h5 mb-3">Articles</h2>
+
+    {% if products %}
+        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
+            {% for product in products %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <img src="{{ product.source }}" alt="{{ product.name }}" class="product-card-img">
+                        <div class="card-body p-2">
+                            <h6 class="card-title">
+                                <a href="{{ url_for('products.product_detail', product_id=product.product_id) }}" class="text-decoration-none text-dark">{{ product.name }}</a>
+                            </h6>
+                            <p class="card-text fw-bold text-primary mb-2">${{ product.cost }}</p>
+                        </div>
+                        <div class="card-footer p-2">
+                            {% if 'user_id' in session %}
+                                <form method="post" action="{{ url_for('cart.add_to_cart', product_id=product.product_id) }}">
+                                    <button type="submit" class="btn btn-sm btn-primary w-100">Add to Cart</button>
+                                </form>
+                            {% else %}
+                                <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-outline-secondary w-100">Log in to buy</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted">No articles found.</p>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+    <div class="row g-4">
+        <div class="col-md-4">
+            <img src="{{ product.source }}" alt="{{ product.name }}" class="product-detail-img img-fluid rounded">
+        </div>
+        <div class="col-md-8">
+            <h1 class="fw-bold">{{ product.name }}</h1>
+            <p class="price-tag">${{ product.cost }}</p>
+            <p class="text-muted">Available copies: {{ product.available_copies }}</p>
+            <p>{{ product.information }}</p>
+
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                {% if 'user_id' in session %}
+                    <form method="post" action="{{ url_for('cart.add_to_cart', product_id=product.product_id) }}">
+                        <button type="submit" class="btn btn-primary">Add to Cart</button>
+                    </form>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Log in to add to Cart</a>
+                {% endif %}
+
+                {% if product_in_wishlist %}
+                    <form method="post" action="{{ url_for('wishlist.remove_from_wishlist', product_id=product.product_id) }}">
+                        <button type="submit" class="btn btn-outline-danger">Remove from Wishlist</button>
+                    </form>
+                {% else %}
+                    <form method="post" action="{{ url_for('wishlist.add_to_wishlist', product_id=product.product_id) }}">
+                        <button type="submit" class="btn btn-outline-secondary">Add to Wishlist</button>
+                    </form>
+                {% endif %}
+
+                <form action="{{ url_for('users.subscribe_to_seller', seller_id=product.seller_id, product_id=product.product_id) }}" method="POST">
+                    <button type="submit" class="btn btn-outline-primary">Subscribe to Seller</button>
+                </form>
+            </div>
+
+            <div class="border-top pt-3">
+                <p class="small text-muted mb-1">Sold by: <a href="{{ url_for('products.seller_shop', seller_id=product.seller_id) }}" class="fw-semibold">{{ product.shopname }}</a></p>
+                {% if product.website_url %}
+                    <p class="small text-muted mb-0">Website: <a href="{{ product.website_url }}">{{ product.website_url }}</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h2 class="h4 mb-3">Reviews</h2>
+        {% if reviews %}
+            <ul class="list-group list-group-flush mb-3">
+                {% for review in reviews %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ review.username }}</strong>
+                                <span class="badge bg-warning text-dark ms-2">{{ review.rating }} / 5</span>
+                                <p class="mb-1 mt-1">{{ review.comment }}</p>
+                                <small class="text-muted">{{ review.r_date }}</small>
+                            </div>
+                            {% if review.reviewer == user_id %}
+                                <form method="post" action="{{ url_for('products.delete_review', review_id=review.r_id) }}">
+                                    <input type="hidden" name="product_id" value="{{ product.product_id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted">No reviews yet.</p>
+        {% endif %}
+
+        {% if 'user_id' in session %}
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="h5 mb-3">Write a Review</h3>
+                    <form method="post" action="{{ url_for('products.add_review', product_id=product.product_id) }}">
+                        <div class="mb-3">
+                            <label for="rating" class="form-label">Rating (1–5)</label>
+                            <input type="number" class="form-control" id="rating" name="rating" min="1" max="5" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comment" class="form-label">Comment</label>
+                            <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <p><a href="{{ url_for('auth.login') }}">Please log in</a> to write a review.</p>
+        {% endif %}
+    </div>
+
+    <a href="{{ url_for('products.product_list') }}" class="btn btn-outline-secondary mt-3">Back to Products</a>
+{% endblock %}

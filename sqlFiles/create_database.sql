@@ -27,7 +27,7 @@ CREATE TABLE Users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    acc_creation_date DATE DEFAULT CURRENT_DATE,
+    acc_creation_date DATE DEFAULT (CURRENT_DATE),
     cart_id INT,
     email VARCHAR(255) NOT NULL UNIQUE
 );
@@ -88,7 +88,7 @@ CREATE TABLE Reviews (
     r_id INT PRIMARY KEY AUTO_INCREMENT,
     rating INT CHECK (rating >= 1 AND rating <= 5),
     product_id INT,
-    r_date DATE DEFAULT CURRENT_DATE,
+    r_date DATE DEFAULT (CURRENT_DATE),
     reviewer INT,
     comment TEXT,
     FOREIGN KEY (product_id) REFERENCES Products(product_id),
@@ -129,7 +129,7 @@ CREATE TABLE Payments (
     payment_id INT PRIMARY KEY AUTO_INCREMENT,
     order_id INT,
     method_id INT,
-    p_date DATE DEFAULT CURRENT_DATE,
+    p_date DATE DEFAULT (CURRENT_DATE),
     FOREIGN KEY (order_id) REFERENCES Orders(order_id),
     FOREIGN KEY (method_id) REFERENCES PaymentMethods(pm_id)
 );
@@ -138,7 +138,7 @@ CREATE TABLE Subscriptions (
     sub_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT,
     seller_id INT,
-    sub_date DATE DEFAULT CURRENT_DATE,
+    sub_date DATE DEFAULT (CURRENT_DATE),
     FOREIGN KEY (user_id) REFERENCES Users(user_id),
     FOREIGN KEY (seller_id) REFERENCES Sellers(seller_id)
 );
