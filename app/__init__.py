@@ -17,6 +17,7 @@ def create_app(config=DevelopmentConfig):
     from .blueprints.wishlist import bp as wishlist_bp
     from .blueprints.messaging import bp as messaging_bp
     from .blueprints.users import bp as users_bp
+    from .blueprints.api import bp as api_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(products_bp)
@@ -25,6 +26,7 @@ def create_app(config=DevelopmentConfig):
     app.register_blueprint(wishlist_bp)
     app.register_blueprint(messaging_bp)
     app.register_blueprint(users_bp)
+    app.register_blueprint(api_bp, url_prefix='/api')
 
     @app.errorhandler(404)
     def not_found(e):

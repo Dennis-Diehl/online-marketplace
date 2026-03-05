@@ -15,21 +15,18 @@
 
             <div class="d-flex flex-wrap gap-2 mb-3">
                 {% if 'user_id' in session %}
-                    <form method="post" action="{{ url_for('cart.add_to_cart', product_id=product.product_id) }}">
-                        <button type="submit" class="btn btn-primary">Add to Cart</button>
-                    </form>
+                    <button class="btn btn-primary" onclick="addToCart({{ product.product_id }})">Add to Cart</button>
                 {% else %}
                     <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Log in to add to Cart</a>
                 {% endif %}
 
-                {% if product_in_wishlist %}
-                    <form method="post" action="{{ url_for('wishlist.remove_from_wishlist', product_id=product.product_id) }}">
-                        <button type="submit" class="btn btn-outline-danger">Remove from Wishlist</button>
-                    </form>
-                {% else %}
-                    <form method="post" action="{{ url_for('wishlist.add_to_wishlist', product_id=product.product_id) }}">
-                        <button type="submit" class="btn btn-outline-secondary">Add to Wishlist</button>
-                    </form>
+                {% if 'user_id' in session %}
+                    <button id="wishlist-btn" class="btn {{ 'btn-outline-danger' if product_in_wishlist else 'btn-outline-secondary' }}"
+                            data-product-id="{{ product.product_id }}"
+                            data-in-wishlist="{{ 'true' if product_in_wishlist else 'false' }}"
+                            onclick="toggleWishlist(this)">
+                        {{ 'Remove from Wishlist' if product_in_wishlist else 'Add to Wishlist' }}
+                    </button>
                 {% endif %}
 
                 <form action="{{ url_for('users.subscribe_to_seller', seller_id=product.seller_id, product_id=product.product_id) }}" method="POST">
